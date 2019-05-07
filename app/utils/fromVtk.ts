@@ -9,7 +9,7 @@ export const fromVtk = (model, perfusion) => {
     const perfusionPath = perfusion.path;
 
     const options = { 
-        smooth:500, 
+        smooth:200, 
         threshold:1, 
         shouldThreshold:true, 
         reductionFactor:0.5 

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { MeshPhysicalMaterial, DoubleSide } from 'three';
 
-
+ 
 
 export const meshFromGeometry = (localPlane, model) => geometry => {
     
@@ -12,12 +12,12 @@ export const meshFromGeometry = (localPlane, model) => geometry => {
         metalness: 0.4,
         roughness: 0.8,
         clearCoat: 0.2,
-        depthWrite: ! model,
+        //depthWrite: ! model,
         clearCoatRoughness: 0.2,
         reflectivity: 0.2,
         side: DoubleSide,
-        transparent : model,
-        opacity: model ? 0.5 : 1,
+        transparent : false, //model,
+        opacity: 1, //model ? 0.5 : 1,
         clipShadows: true,
         depthTest: true
     });

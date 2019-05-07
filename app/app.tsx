@@ -329,16 +329,18 @@ export class App extends Component<Store,AppState>{
 
 
         return Promise.all([ 
-            
+
+            readNIFTIFile(this.state.model),
+
             readNIFTIFile(this.state.perfusion),
             
             fromVtk(this.state.model, this.state.perfusion)
 
         ])
-        .then(( [perfusion, mp] : [niftiData, any] ) => {
+        .then(( [model, perfusion, mp] : [any, niftiData, any] ) => {
 
             perfusion.niftiImage = imageToTypedData(perfusion.niftiImage, perfusion.niftiHeader);
-
+            model.niftiImage = imageToTypedData(model.niftiImage, model.niftiHeader);
             return Promise.all([
 
                 stlToGeometry(mp[0]),
@@ -348,7 +350,7 @@ export class App extends Component<Store,AppState>{
             ])
             .then(([g1,g2] : any) => {
 
-                this.onNIFTILoaded(perfusion, g1, g2);
+                this.onNIFTILoaded(model, perfusion, g1, g2);
 
                 this.props.dispatch({ type:"loading", load:false });
     
@@ -362,7 +364,7 @@ export class App extends Component<Store,AppState>{
 
 
 
-    onNIFTILoaded = (perfusion:niftiData, modelGeometry:BufferGeometry, p:BufferGeometry) => {
+    onNIFTILoaded = (model:niftiData, perfusion:niftiData, modelGeometry:BufferGeometry, p:BufferGeometry) => {
  
         this.localPlane = new THREE.Plane( new THREE.Vector3(0, -1, 0), 0.8 );
 
@@ -371,7 +373,7 @@ export class App extends Component<Store,AppState>{
             perfusionPoints, 
             perfusionColors,
             indices_p
-        } = imageToVolume(perfusion);
+        } = imageToVolume(model);
 
         const { perfusionColorsEqualized, min, max } = equalize(perfusionColors);
 
@@ -383,9 +385,11 @@ export class App extends Component<Store,AppState>{
 
         lut.setMax(max*0.95);
 
+        const color = lut.getColor( (min+max)/2 );
+
         for(let i = 0; i < perfusionColorsEqualized.length; i++){
 
-            const color = lut.getColor( perfusionColorsEqualized[i] );
+            //const color = lut.getColor( perfusionColorsEqualized[i] );
 
             rgb.push(color.r, color.g, color.b);
 
@@ -393,13 +397,17 @@ export class App extends Component<Store,AppState>{
 
         const { out_index, out_position, out_color, out_normal, out_indices } = mergeVertices( 
 
-            p.attributes.position.array as any,
+            perfusionPoints, 
+            
+            perfusionNormals, 
+           
+            //p.attributes.position.array as any,
 
-            p.attributes.normal.array as any,
+            //p.attributes.normal.array as any,
 
-            rgb.slice(0, p.attributes.position.length), //TODO FIX
+            rgb.slice(0, perfusionPoints.length), //TODO FIX
 
-            indices_p.slice(0, p.attributes.position.length)
+            indices_p.slice(0, perfusionPoints.length) //.slice(0, p.attributes.position.length)
             
         );
 
@@ -482,7 +490,7 @@ export class App extends Component<Store,AppState>{
 
         });
 
-        this.scene.add(modelMesh);
+        //this.scene.add(modelMesh);
 
         this.scene.add(perfusionMesh);
 
