@@ -1,15 +1,11 @@
-import { Color } from "three";
 
-
-
-export const mergeVertices = (position:number[], normal:number[], colors:number[], indices:number[]) => {
+export const mergeVertices = (position:number[], normal:number[], colors:number[]) => {
 
     const hash = {};
     const out_position = [];
     const out_color = [];
     const out_normal = [];
     const out_index = [];
-    const out_indices = [];
 
     let x = 0;
     let y = 0;
@@ -18,10 +14,6 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
     let n1 = 0;
     let n2 = 0;
     let n3 = 0;
-
-    let idx1 = 0;
-    let idx2 = 0;
-    let idx3 = 0;
 
     let r = 0;
     let g = 0;
@@ -40,10 +32,6 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
         n1 = normal[i];
         n2 = normal[i+1];
         n3 = normal[i+2];
-
-        idx1 = 0; //indices[i];
-        idx2 = 0; //indices[i+1];
-        idx3 = 0; //indices[i+2];
 
         r = colors[i];
         g = colors[i+1];
@@ -67,8 +55,6 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
 
             out_normal.push(n1,n2,n3);
 
-            out_indices.push(idx1,idx2,idx3);
-
             out_index.push(index/3);
 
         }
@@ -77,7 +63,6 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
 
     return {
         out_index,
-        out_indices,
         out_position,
         out_color,
         out_normal

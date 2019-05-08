@@ -1,9 +1,7 @@
 import { app, BrowserWindow, Menu } from 'electron';
 import { initListeners } from './listeners';
-import { isDev } from './app/utils/isDev';
 const fs = require("fs-extra");
 const path = require('path');
-const locked = app.requestSingleInstanceLock(); //TODO remove lock to allow multiple windows simultaneously
 
 
 
@@ -53,24 +51,21 @@ export let win = null;
 
 
 
-app.on(
-    'second-instance', 
-    (event, argv, cwd) => {
-
-        if(win){
-           win.show();
-           win.restore();  
-           win.focus();
-        } 
-
-    }
-);
-
-
-
 const onWindowLoaded = () => {
 
-  win.webContents.send("loaded");
+  const folder = "samples";
+
+  const files = fs.readdirSync(folder);
+
+  const data = files.map(file => {
+
+    const p = path.resolve(__dirname, folder, file);
+
+    return fs.readFileSync(p);
+
+  });
+
+  win.webContents.send("loaded", data);
 
   win.webContents.openDevTools();
 
@@ -78,18 +73,20 @@ const onWindowLoaded = () => {
 
 
 
-const createWindow = () => {
+const options = {
+  width : 1800, 
+  height : 900,
+  frame : true,
+  show : true, 
+  backgroundColor : '#eeeeee', 
+  title : "NIFTI Viewer",
+  icon : path.resolve(__dirname,'icon.ico'), 
+  resizable : true
+};
 
-  const options = {
-    width : 1800, 
-    height : 900,
-    frame : true,
-    show : true, 
-    backgroundColor : '#eeeeee', 
-    title : "NIFTI Viewer",
-    icon : path.resolve(__dirname,'icon.ico'), 
-    resizable : true
-  };
+
+
+const createWindow = () => {
 
   win = new BrowserWindow(options);
 
@@ -97,40 +94,19 @@ const createWindow = () => {
 
   win.setMenu(null);
 
-  const templatePath = `file://${__dirname}/app.html`;
-
-  return loadTemplate(win, templatePath).then(() => onWindowLoaded());
+  return loadTemplate(win, `file://${__dirname}/app.html`).then(() => onWindowLoaded());
 
 }
 
 
 
-const onReady = () => {
+app.on('ready', () => {
 
   initListeners();
   
   createWindow();
 
-}
-
-
-
-app.on(
-  'ready', 
-  () => {
-
-    if( ! locked ){ 
-
-      app.quit();
-
-    }else{
-
-      onReady();
-
-    }
-
-  }
-);    
+});    
 
 
 

@@ -1,16 +1,15 @@
 {
   "name": "nifti",
   "productName": "NIFTIViewer",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "main": "development/main.js",
   "scripts": {
     "start": "node_modules/.bin/electron .",
-    "build:renderer:production": "webpack -w --env production --config webpack.config.js",
+    "build:renderer:production": "webpack -w --env production --config webpack.renderer.config.js",
     "build:main:production": "webpack -w --env production --config webpack.main.config.js",
-    "build:renderer": "webpack -w --env development --config webpack.config.js",
-    "build:main": "webpack -w --env development --config webpack.main.config.js",
-    "compile": "pyinstaller --onefile script.py"
+    "build:renderer": "webpack -w --env development --config webpack.renderer.config.js",
+    "build:main": "webpack -w --env development --config webpack.main.config.js"
   },
   "homepage": "https://google.com",
   "repository": "",
@@ -64,6 +63,7 @@
     "three-mesh-bvh": "^0.1.2",
     "ts-loader": "4.2.0",
     "tween.js": "^16.6.0",
+    "typedarray-pool": "^1.1.0",
     "typescript": "^2.4.2",
     "uglify-es": "3.3.9",
     "uglifyjs-webpack-plugin": "1.2.5",

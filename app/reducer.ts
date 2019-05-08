@@ -28,15 +28,10 @@ const logger = (before:Store, action:action) => (after:Store) => {
 
 
 
-export const defaultProps : Store = {  
-	showMenu:false,
-	error:"",
-	slice:0,
-	width:0,
-	height:0,
-	min:0,
-	max:0,
-	loading:false
+export const defaultProps : Store = {
+	width:window.innerWidth,
+	height:window.innerHeight,
+	data:[]
 };
 
 

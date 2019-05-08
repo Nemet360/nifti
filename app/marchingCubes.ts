@@ -5,16 +5,16 @@ import { normalize } from './utils/normalize';
 
 type input = { 
   dims:{ x:number, y:number, z:number }, 
-  scalars:number[]
+  scalars:number[],
+  color:boolean
 };
 
 
 
 type output = { 
-  perfusionNormals:any[], 
-  perfusionPoints:any[], 
-  perfusionColors:any[]
-  indices_p:number[]
+  normals:any[], 
+  points:any[], 
+  colors:any[]
 };
 
 
@@ -88,7 +88,9 @@ export const marchingCubes = () : requestData => {
 
 
   const getPointGradient = (i, j, k, dims, slice, spacing, s, g) => {
+
     let sp;
+
     let sm;
 
 
@@ -138,6 +140,7 @@ export const marchingCubes = () : requestData => {
       sm = s[i + j * dims[0] + (k - 1) * slice];
       g[2] = (0.5 * (sm - sp)) / spacing[2];
     }
+
   };
 
 
@@ -164,16 +167,7 @@ export const marchingCubes = () : requestData => {
     voxelGradients[7] = g[1];
     voxelGradients[8] = g[2];
 
-    getPointGradient(
-      i + 1,
-      j + 1,
-      k,
-      dims,
-      slice,
-      spacing,
-      scalars,
-      g
-    );
+    getPointGradient(i + 1, j + 1, k, dims, slice, spacing, scalars, g);
 
     voxelGradients[9] = g[0];
     voxelGradients[10] = g[1];
@@ -185,50 +179,24 @@ export const marchingCubes = () : requestData => {
     voxelGradients[13] = g[1];
     voxelGradients[14] = g[2];
 
-    getPointGradient(
-      i + 1,
-      j,
-      k + 1,
-      dims,
-      slice,
-      spacing,
-      scalars,
-      g
-    );
+    getPointGradient(i + 1, j, k + 1, dims, slice, spacing, scalars, g);
 
     voxelGradients[15] = g[0];
     voxelGradients[16] = g[1];
     voxelGradients[17] = g[2];
 
-    getPointGradient(
-      i,
-      j + 1,
-      k + 1,
-      dims,
-      slice,
-      spacing,
-      scalars,
-      g
-    );
+    getPointGradient(i, j + 1, k + 1, dims, slice, spacing, scalars, g);
 
     voxelGradients[18] = g[0];
     voxelGradients[19] = g[1];
     voxelGradients[20] = g[2];
 
-    getPointGradient(
-      i + 1,
-      j + 1,
-      k + 1,
-      dims,
-      slice,
-      spacing,
-      scalars,
-      g
-    );
+    getPointGradient(i + 1, j + 1, k + 1, dims, slice, spacing, scalars, g);
 
     voxelGradients[21] = g[0];
     voxelGradients[22] = g[1];
     voxelGradients[23] = g[2];
+
   };
 
 
@@ -245,14 +213,17 @@ export const marchingCubes = () : requestData => {
     scalars,
     points,
     normals,
-    colors,
-    indices
+    colors
   }) => {
 
     const xyz = [];
+
     const n = [];
+
     const edge = [];
+
     let pId;
+
     let tmp;
 
 
@@ -317,24 +288,35 @@ export const marchingCubes = () : requestData => {
         if (model.mergePoints) {
 
           edge[0] = ids[edgeVerts[0]];
+
           edge[1] = ids[edgeVerts[1]];
+
           if (edge[0] > edge[1]) {
+
             tmp = edge[0];
+
             edge[0] = edge[1];
+
             edge[1] = tmp;
+
           }
+
           pId = edgeMap.get(edge);
 
         }
 
         if (pId === undefined) {
 
-          const t = (cVal - voxelScalars[edgeVerts[0]]) / (voxelScalars[edgeVerts[1]] - voxelScalars[edgeVerts[0]]);
+          const t = ( cVal - voxelScalars[ edgeVerts[0] ] ) / ( voxelScalars[ edgeVerts[1] ] - voxelScalars[ edgeVerts[0] ] );
+
           const x0 = voxelPts.slice(edgeVerts[0] * 3, (edgeVerts[0] + 1) * 3);
+
           const x1 = voxelPts.slice(edgeVerts[1] * 3, (edgeVerts[1] + 1) * 3);
 
           xyz[0] = x0[0] + t * (x1[0] - x0[0]);
+
           xyz[1] = x0[1] + t * (x1[1] - x0[1]);
+
           xyz[2] = x0[2] + t * (x1[2] - x0[2]);
 
           pId = points.length / 3;
@@ -342,23 +324,13 @@ export const marchingCubes = () : requestData => {
           points.push(xyz[0], xyz[1], xyz[2]);
 
           if(colors){ 
-            
-            colors.push(
-              ( 
-                voxelScalars[0]+
-                voxelScalars[1]+ 
-                voxelScalars[2]+
-                voxelScalars[3]+
-                voxelScalars[4]+ 
-                voxelScalars[5]+
-                voxelScalars[6]+
-                voxelScalars[7]
-              )/8
-            ); 
+
+            const sum = voxelScalars.reduce((a, b) => a + b, 0);
+            const length = voxelScalars.length;
+
+            colors.push(sum/length); 
           
           }
-
-          if(indices){ indices.push(i,j,k); }
 
           if (model.computeNormals) {
             const n0 = voxelGradients.slice( edgeVerts[0] * 3, (edgeVerts[0] + 1) * 3 );
@@ -393,25 +365,23 @@ export const marchingCubes = () : requestData => {
 
   return input => {
 
-    const { dims, scalars } = input;
+    const { dims, scalars, color } = input;
     
     const { x,y,z } = dims;
 
-    const perfusionPoints = [];
+    const points = [];
 
-    const perfusionNormals = [];
+    const normals = [];
 
-    const colors = [];
+    const colors = color ? [] : null;
 
 
 
     const slice = x * y;
 
-    const spacing = [1,1,1]; //[1.5, 1.5, 1.5]
+    const spacing = [1,1,1];
 
     const origin = [0,0,0];
-
-    const indices_p = [];
 
 
 
@@ -431,10 +401,9 @@ export const marchingCubes = () : requestData => {
             origin,
             spacing,
             scalars,
-            points:perfusionPoints,
-            normals:perfusionNormals,
-            colors,
-            indices:indices_p
+            points,
+            normals,
+            colors
           });
 
         }
@@ -444,10 +413,9 @@ export const marchingCubes = () : requestData => {
     }
 
     return { 
-      perfusionColors : colors, 
-      perfusionPoints, 
-      perfusionNormals, 
-      indices_p 
+      colors, 
+      points, 
+      normals
     } as output
 
   }

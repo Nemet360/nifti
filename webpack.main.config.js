@@ -1,4 +1,5 @@
 const path = require("path"); 
+const CopyWebpackPlugin = require('copy-webpack-plugin'); 
 
 
 
@@ -47,6 +48,10 @@ module.exports = env => {
           }
         ]
       },
+
+      plugins : [
+        new CopyWebpackPlugin([{ from : "samples", to : "samples" }])
+      ],
 
       node: {
         __dirname: false,

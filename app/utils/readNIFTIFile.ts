@@ -37,9 +37,11 @@ export const readNIFTIFile = file => (
 
                 if (evt.target['readyState'] === FileReader.DONE) {
 
-                    const result = readNIFTI(evt.target['result']);
+                    const model = readNIFTI(evt.target['result']);
 
-                    resolve(result);
+                    model.niftiImage = imageToTypedData(model.niftiImage, model.niftiHeader);
+
+                    resolve(model);
 
                 }
 

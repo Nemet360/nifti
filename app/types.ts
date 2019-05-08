@@ -11,14 +11,9 @@ export interface action{ type:keyof Store, load:any }
 
 
 export interface Store{
-	showMenu:boolean,
-	error:string,
-	slice:number,
 	width:number,
-	height:number,
-	min:number,
-	max:number,
-	loading:false,
+    height:number,
+    data:any[],
     dispatch?:Dispatch,
     multiple?:any
 }

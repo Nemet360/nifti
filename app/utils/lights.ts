@@ -2,7 +2,7 @@ import { AmbientLight, DirectionalLight } from 'three';
 
 
 
-export const initLights = () => {
+export const lights = () => {
 
     const light = new AmbientLight(0xffffff, 0.5);
 
@@ -14,9 +14,13 @@ export const initLights = () => {
     ]
     .map(
         tuple => {
+
             const light = new DirectionalLight(0xffffff, 0.5);
+
             light.position.set( tuple[0], tuple[1], tuple[2] ).normalize();  
+
             return light;
+            
         }
     );   
 
