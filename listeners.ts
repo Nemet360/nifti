@@ -17,8 +17,8 @@ const listeners = [
 
 
 
-export let initListeners = () : void => listeners.forEach(({name,callback}) => ipcMain.on(name, callback));  
+export let initListeners = () : void => listeners.forEach(({ name, callback }) => ipcMain.on(name, callback));  
 
 
 
-export let suspendListeners = () : void => listeners.forEach(({name,callback}) => ipcMain.removeAllListeners(name));
+export let suspendListeners = () : void => listeners.forEach(({ name, callback }) => ipcMain.removeAllListeners(name));

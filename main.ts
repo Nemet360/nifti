@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu } from 'electron';
 import { initListeners } from './listeners';
+import { registerLocalShortcuts } from './shortcuts';
 const fs = require("fs-extra");
 const path = require('path');
 
@@ -78,7 +79,7 @@ const options = {
   height : 900,
   frame : true,
   show : true, 
-  backgroundColor : '#eeeeee', 
+  backgroundColor : '#6495ed',
   title : "NIFTI Viewer",
   icon : path.resolve(__dirname,'icon.ico'), 
   resizable : true
@@ -103,6 +104,8 @@ const createWindow = () => {
 app.on('ready', () => {
 
   initListeners();
+
+  registerLocalShortcuts();
   
   createWindow();
 

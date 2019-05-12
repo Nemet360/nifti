@@ -24,9 +24,9 @@ export const transform = file => {
         const { niftiHeader, niftiImage } = model;
         
         const dims = { x : niftiHeader.dims[1], y : niftiHeader.dims[2], z : niftiHeader.dims[3] };
-
+        
         const result = requestData({ dims, scalars:niftiImage, color:niftiHeader.datatypeCode===16 })
-    
+        
         const { colors, points, normals } = result;
 
         const rgb = colors ? transformPerfusionColors(colors) : initializeColors(points.length); 

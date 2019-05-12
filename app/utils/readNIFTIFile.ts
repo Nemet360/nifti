@@ -1,4 +1,3 @@
-import { makeSlice } from "./makeSlice";
 import { imageToTypedData } from "./imageToTypedData";
 const nifti = require("nifti-reader-js");
 
@@ -29,9 +28,9 @@ export const readNIFTIFile = file => (
 
         resolve => {
         
-            let blob = makeSlice(file, 0, file.size);
+            const blob = new Blob([new Uint8Array(file)]);
 
-            let reader = new FileReader();
+            const reader = new FileReader();
 
             reader.onloadend = function (evt) {
 

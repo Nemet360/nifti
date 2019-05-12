@@ -1,5 +1,6 @@
 import caseTable from './caseTable';
 import { normalize } from './utils/normalize';
+import { Vector3 } from 'three';
 
 
 
@@ -25,7 +26,7 @@ type requestData = (input:input) => output;
 
 const model = {
   computeNormals:true, 
-  mergePoints:true, 
+  mergePoints:false, 
   contourValue:1
 };
 
@@ -210,23 +211,18 @@ export const marchingCubes = () : requestData => {
     dims,
     origin,
     spacing,
-    scalars,
-    points,
-    normals,
-    colors
+    scalars
   }) => {
+
+    const points = [];
+    const normals = [];
+    const colors = [];
 
     const xyz = [];
 
     const n = [];
 
-    const edge = [];
-
     let pId;
-
-    let tmp;
-
-
 
     ids[0] = k * slice + j * dims[0] + i;
     ids[1] = ids[0] + 1;
@@ -255,27 +251,13 @@ export const marchingCubes = () : requestData => {
 
     }
 
-
-
     const voxelTris = caseTable.getCase(index);
-
-
 
     if (voxelTris[0] < 0) { return; }
 
-
-
     getVoxelPoints(i, j, k, dims, origin, spacing);
 
-  
-
-    if (model.computeNormals) {
-
-      getVoxelGradients(i, j, k, dims, slice, spacing, scalars);
-
-    }
-
-    
+    getVoxelGradients(i, j, k, dims, slice, spacing, scalars);
 
     for (let idx = 0; voxelTris[idx] >= 0; idx += 3) {
      
@@ -284,26 +266,6 @@ export const marchingCubes = () : requestData => {
         const edgeVerts = caseTable.getEdge(voxelTris[idx + eid]);
 
         pId = undefined;
-
-        if (model.mergePoints) {
-
-          edge[0] = ids[edgeVerts[0]];
-
-          edge[1] = ids[edgeVerts[1]];
-
-          if (edge[0] > edge[1]) {
-
-            tmp = edge[0];
-
-            edge[0] = edge[1];
-
-            edge[1] = tmp;
-
-          }
-
-          pId = edgeMap.get(edge);
-
-        }
 
         if (pId === undefined) {
 
@@ -321,42 +283,31 @@ export const marchingCubes = () : requestData => {
 
           pId = points.length / 3;
 
-          points.push(xyz[0], xyz[1], xyz[2]);
+          const n0 = voxelGradients.slice( edgeVerts[0] * 3, (edgeVerts[0] + 1) * 3 );
+          const n1 = voxelGradients.slice( edgeVerts[1] * 3, (edgeVerts[1] + 1) * 3 );
 
-          if(colors){ 
+          n[0] = n0[0] + t * (n1[0] - n0[0]);
+          n[1] = n0[1] + t * (n1[1] - n0[1]);
+          n[2] = n0[2] + t * (n1[2] - n0[2]);
 
-            const sum = voxelScalars.reduce((a, b) => a + b, 0);
-            const length = voxelScalars.length;
+          normalize(n);
 
-            colors.push(sum/length); 
-          
-          }
+          normals.push(n[0], n[1], n[2]);
 
-          if (model.computeNormals) {
-            const n0 = voxelGradients.slice( edgeVerts[0] * 3, (edgeVerts[0] + 1) * 3 );
-            const n1 = voxelGradients.slice( edgeVerts[1] * 3, (edgeVerts[1] + 1) * 3 );
-            n[0] = n0[0] + t * (n1[0] - n0[0]);
-            n[1] = n0[1] + t * (n1[1] - n0[1]);
-            n[2] = n0[2] + t * (n1[2] - n0[2]);
-            normalize(n);
-            normals.push(n[0], n[1], n[2]);
-          }
+          points.push(xyz[0], xyz[1], xyz[2])
 
-          if (model.mergePoints) {
-            edge[0] = ids[edgeVerts[0]];
-            edge[1] = ids[edgeVerts[1]];
-            if (edge[0] > edge[1]) {
-              tmp = edge[0];
-              edge[0] = edge[1];
-              edge[1] = tmp; 
-            }
-            edgeMap[edge as any] = pId;
-          }
-
+          colors.push( (voxelScalars[edgeVerts[1]] + voxelScalars[edgeVerts[0]]) / 2 );
+        
         }
 
       }
 
+    }
+
+    return {
+      p:points,
+      n:normals,
+      c:colors
     }
 
   };
@@ -375,23 +326,28 @@ export const marchingCubes = () : requestData => {
 
     const colors = color ? [] : null;
 
-
-
     const slice = x * y;
 
     const spacing = [1,1,1];
 
     const origin = [0,0,0];
 
+    const avg = c => {
+
+      const sum = c.reduce((a,v) => a+v, 0);
+
+      return c.map(v => sum/c.length);
+
+    }
 
 
     for (let k = 0; k < z - 1; ++k) {
-
+      
       for (let j = 0; j < y - 1; ++j) {
 
         for (let i = 0; i < x - 1; ++i) {
-
-          produceTriangles({
+          
+          const result = produceTriangles({
             cVal:model.contourValue,
             i,
             j,
@@ -400,11 +356,24 @@ export const marchingCubes = () : requestData => {
             dims:[x,y,z],
             origin,
             spacing,
-            scalars,
-            points,
-            normals,
-            colors
+            scalars
           });
+
+          if(result && result.p.length > 0){
+
+            const { p, n, c } = result;
+
+            points.push(...p);
+
+            normals.push(...n);
+
+            if(colors){
+
+              colors.push(...avg(c));
+
+            }
+
+          }
 
         }
 

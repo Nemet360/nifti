@@ -426,13 +426,7 @@ export const OrbitControls = function ( options ) {
 
 	}
 
-	//
-	// event callbacks - update the object state
-	//
-
 	function handleMouseDownRotate( event ) {
-
-		//console.log( 'handleMouseDownRotate' );
 
 		rotateStart.set( event.clientX, event.clientY );
 
@@ -440,23 +434,17 @@ export const OrbitControls = function ( options ) {
 
 	function handleMouseDownDolly( event ) {
 
-		//console.log( 'handleMouseDownDolly' );
-
 		dollyStart.set( event.clientX, event.clientY );
 
 	}
 
 	function handleMouseDownPan( event ) {
 
-		//console.log( 'handleMouseDownPan' );
-
 		panStart.set( event.clientX, event.clientY );
 
 	}
 
 	function handleMouseMoveRotate( event ) {
-
-		//console.log( 'handleMouseMoveRotate' );
 
 		rotateEnd.set( event.clientX, event.clientY );
 
@@ -477,8 +465,6 @@ export const OrbitControls = function ( options ) {
 	}
 
 	function handleMouseMoveDolly( event ) {
-
-		//console.log( 'handleMouseMoveDolly' );
 
 		dollyEnd.set( event.clientX, event.clientY );
 
@@ -502,8 +488,6 @@ export const OrbitControls = function ( options ) {
 
 	function handleMouseMovePan( event ) {
 
-		//console.log( 'handleMouseMovePan' );
-
 		panEnd.set( event.clientX, event.clientY );
 
 		panDelta.subVectors( panEnd, panStart ).multiplyScalar( scope.panSpeed );
@@ -518,13 +502,11 @@ export const OrbitControls = function ( options ) {
 
 	function handleMouseUp( event ) {
 
-		// console.log( 'handleMouseUp' );
+	
 
 	}
 
 	function handleMouseWheel( event ) {
-
-		// console.log( 'handleMouseWheel' );
 
 		if ( event.deltaY < 0 ) {
 
@@ -543,8 +525,6 @@ export const OrbitControls = function ( options ) {
 	}
 
 	function handleKeyDown( event ) {
-
-		// console.log( 'handleKeyDown' );
 
 		var needsUpdate = false;
 
@@ -574,7 +554,6 @@ export const OrbitControls = function ( options ) {
 
 		if ( needsUpdate ) {
 
-			// prevent the browser from scrolling on cursor keys
 			event.preventDefault();
 
 			scope.update();
@@ -586,15 +565,11 @@ export const OrbitControls = function ( options ) {
 
 	function handleTouchStartRotate( event ) {
 
-		//console.log( 'handleTouchStartRotate' );
-
 		rotateStart.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
 
 	}
 
 	function handleTouchStartDollyPan( event ) {
-
-		//console.log( 'handleTouchStartDollyPan' );
 
 		if ( scope.enableZoom ) {
 
@@ -620,8 +595,6 @@ export const OrbitControls = function ( options ) {
 
 	function handleTouchMoveRotate( event ) {
 
-		//console.log( 'handleTouchMoveRotate' );
-
 		rotateEnd.set( event.touches[ 0 ].pageX, event.touches[ 0 ].pageY );
 
 		rotateDelta.subVectors( rotateEnd, rotateStart ).multiplyScalar( scope.rotateSpeed );
@@ -639,8 +612,6 @@ export const OrbitControls = function ( options ) {
 	}
 
 	function handleTouchMoveDollyPan( event ) {
-
-		//console.log( 'handleTouchMoveDollyPan' );
 
 		if ( scope.enableZoom ) {
 
@@ -680,13 +651,9 @@ export const OrbitControls = function ( options ) {
 
 	function handleTouchEnd( event ) {
 
-		//console.log( 'handleTouchEnd' );
+
 
 	}
-
-	//
-	// event handlers - FSM: listen for events and reset state
-	//
 
 	function onMouseDown( event ) {
 

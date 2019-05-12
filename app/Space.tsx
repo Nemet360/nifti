@@ -5,14 +5,11 @@ import { Component } from "react";
 import { Subscription } from 'rxjs';
 import { fromEvent } from 'rxjs/observable/fromEvent'; 
 import * as THREE from "three";
-import { Vector3, WebGLRenderer, PerspectiveCamera, Scene, Light, Mesh, BufferGeometry, Geometry, Raycaster, Color, Matrix4 } from 'three';
+import { Vector3, WebGLRenderer, PerspectiveCamera, Scene, Light, Mesh, BufferGeometry, Geometry, Raycaster, Color, Matrix4, Box3 } from 'three';
 import { lights } from './utils/lights';
 import { OrbitControls } from './OrbitControls';
 import { isNil, isEmpty, compose, sort, drop, toPairs, divide, uniqBy, splitEvery, range, path, prop, flatten, clone } from 'ramda';
 import * as ReactDOM from 'react-dom';
-import { Store, niftiData } from './types';
-import { reducer, defaultProps } from './reducer';
-import { Provider, connect } from "react-redux";
 import { createStore } from "redux"; 
 import { ipcRenderer, remote } from 'electron';
 import Button from '@material-ui/core/Button';
@@ -24,7 +21,6 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Slider from '@material-ui/lab/Slider';
 import { readNIFTIFile } from './utils/readNIFTIFile';
 import { getObjectCenter } from './utils/getObjectCenter';
-import { attachDispatchToProps } from './utils/attachDispatchToProps';
 import { exportJSON } from './utils/exportJSON';
 import { imageToTypedData } from './utils/imageToTypedData';
 import Paper from '@material-ui/core/Paper';
@@ -39,12 +35,16 @@ import { initializeColors } from './utils/initializeColors';
 import { transformPerfusionColors } from './utils/transformPerfusionColors';
 import { measureTimePromise } from './utils/measureTimePromise';
 import { taubinSmooth } from './laplacian';
+import { Quaternion } from 'three';
 const Spinner = require('react-spinkit');
 
 
 
 interface SpaceProps{
-    group:Mesh
+    index:number,
+    group:Mesh,
+    onViewChange:(camera:any) => void,
+    camera:PerspectiveCamera
 }
 
 
@@ -79,6 +79,54 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
 
 
+    updateTransparency = () => {
+
+        const position = this.getInitialCameraPosition(); 
+
+        const end = new Vector3(0, 0, 0);
+
+        const start = position.distanceTo(end);
+
+        const current = this.camera.position.distanceTo(end);
+        
+        const x = current/start;
+
+        const opacity = 1 - Math.pow( Math.E, - 12 * Math.pow(x, 8) );
+     
+        this.props.group.traverse((mesh:any) => {
+
+            if(mesh.userData.transparent && mesh.userData.shader){
+
+                mesh.material.uniforms.opacity.value = opacity < 0.25 ? 0.25 : opacity; 
+
+            }else if(mesh.userData.transparent){
+
+                mesh.material['opacity'] = opacity < 0.25 ? 0.25 : opacity;
+
+                mesh.material['transparent'] = true;
+
+            }
+
+        });
+
+    }
+
+
+
+    componentWillReceiveProps(next:SpaceProps){
+
+        if(next.camera!==this.props.camera){
+
+            this.camera.copy(next.camera);
+
+            this.updateTransparency();
+
+        }
+
+    }
+
+
+
     componentDidMount(){
 
         if(isNil(this.container)){ return }    
@@ -109,6 +157,30 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
 
 
+    getInitialCameraPosition = () => {
+
+        const { max, min } = new Box3().setFromObject(this.props.group);
+        
+        const center = getObjectCenter(this.props.group.children[0] as any);
+
+        this.controls.target.set(center.x, center.y, center.z);
+
+        const wd = max.x - min.x;
+
+        const hg = max.y - min.y;
+
+        const x = wd * 2;
+
+        const y = hg * 2;
+
+        const z = 0;
+
+        return new Vector3(x,y,z);
+
+    }
+
+
+
     onResize = e => {
 
         this.boundingBox = this.container.getBoundingClientRect();
@@ -131,7 +203,9 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
     onChange = () => {
 
-        console.log("controller activated")
+        const { onViewChange } = this.props;
+
+        onViewChange(this.camera);
 
     }
 
@@ -140,8 +214,6 @@ export class Space extends Component<SpaceProps,SpaceState>{
     init = () => { 
 
         const { group } = this.props;
-
-        console.log("init", group);
 
         this.scene = this.setupScene();
 
@@ -159,7 +231,15 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
         this.scene.add(group);
 
+        const position = this.getInitialCameraPosition(); 
+
+        this.camera.position.copy(position);
+
+        this.camera.lookAt(this.controls.target);
+
         this.animate();
+
+        this.props.onViewChange(this.camera);
 
     }    
 
@@ -179,11 +259,7 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
         const { width, height } = container.getBoundingClientRect();
 
-        const camera = new PerspectiveCamera(50, width/height, 1, 2000); 
-
-        camera.position.set(50,50,50);
-
-        camera.lookAt(new Vector3(0,0,0)); 
+        const camera = new PerspectiveCamera(50, width/height, 10, 1000); 
 
         return camera;
 
@@ -202,10 +278,10 @@ export class Space extends Component<SpaceProps,SpaceState>{
         renderer.setClearColor(0xeeeeee); 
 
         renderer.setPixelRatio(window.devicePixelRatio);
+        
+        //renderer.gammaInput = true;
 
-        renderer.gammaInput = true;
-
-        renderer.gammaOutput = true;
+        //renderer.gammaOutput = true;
 
         renderer.toneMapping = THREE.Uncharted2ToneMapping;
 
@@ -214,6 +290,8 @@ export class Space extends Component<SpaceProps,SpaceState>{
         renderer.shadowMap.enabled = true;
 
         renderer.localClippingEnabled = true;
+
+        renderer.context.getExtension('EXT_frag_depth');
 
         return renderer;
 
@@ -266,8 +344,7 @@ export class Space extends Component<SpaceProps,SpaceState>{
             width : "100%", 
             height : "100%", 
             position : "relative", 
-            overflow : "hidden",
-            zIndex : 0
+            overflow : "hidden"
         }}>   
             <div 
                 ref={thisNode => { this.container = thisNode; }}
