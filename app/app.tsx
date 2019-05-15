@@ -2,7 +2,7 @@ import './assets/fonts/index.css';
 import './assets/styles.css'; 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { isEmpty, isNil, compose, sort, drop, toPairs, divide, uniqBy, splitEvery, range, path, prop, flatten, clone, map } from 'ramda';
+import { isEmpty, isNil, compose, sort, drop, toPairs, divide, uniqBy, splitEvery, range, path, prop, flatten, clone, map, identity } from 'ramda';
 import { createStore } from "redux"; 
 import { Component } from "react"; 
 import { ipcRenderer, remote } from 'electron';
@@ -43,6 +43,7 @@ import { vertex_model_front } from './shaders/vertex-model-front';
 import { fragment_perfusion_front } from './shaders/fragment-perfusion-front';
 import { vertex_perfusion_front } from './shaders/vertex-perfusion-front';
 import { merge } from 'rxjs/observable/merge';
+import { smoothGeometry } from './utils/smoothGeometry';
 THREE.BufferGeometry.prototype['computeBoundsTree'] = computeBoundsTree;
 THREE.BufferGeometry.prototype['disposeBoundsTree'] = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -136,6 +137,44 @@ const generatorsShaders = {
 
         return group;
 
+    },
+
+    "4" : attributes => {
+
+        const geometry = attributesToGeometry(attributes);
+
+        geometry.center();
+
+        const material = new MeshPhysicalMaterial({
+            side : THREE.FrontSide,
+            vertexColors : THREE.VertexColors,
+            metalness : 0.0,
+            roughness : 0.0,
+            clearCoat : 1.0,
+            clearCoatRoughness : 1.0,
+            reflectivity : 1.0,
+            transparent : false,
+            opacity : 1,
+            clipShadows : true,
+            depthWrite : true
+        });
+    
+        geometry.scale( 0.8, 0.8, 0.8 );
+
+        const m = new THREE.Mesh(geometry, material);
+
+        m.rotation.x = Math.PI / 2;
+
+        m.userData.transparent = true;
+
+        const group = new THREE.Group();
+        
+        group.add(m);
+
+        group.userData.brain = true;
+
+        return group;
+
     }
 
 }
@@ -167,6 +206,8 @@ const generators = {
         });
 
         const m1 = new THREE.Mesh(geometry, material1);
+
+        m1.userData.dataType = "16";
 
         const group = new THREE.Group();
         
@@ -215,7 +256,7 @@ const generators = {
             clipShadows : true,
             depthWrite : true
         });
-    
+
         const m1 = new THREE.Mesh(geometry, material1);
 
         const m2 = new THREE.Mesh(geometry, material2);
@@ -224,10 +265,82 @@ const generators = {
 
         m2.userData.transparent = true;
 
+        m1.userData.dataType = "2";
+
+        m2.userData.dataType = "2";
+
         const group = new THREE.Group();
         
         group.add(m1);
 
+        group.add(m2);
+
+        group.userData.brain = true;
+
+        return group;
+
+    },
+
+    "4" : attributes => {
+
+        const geometry = attributesToGeometry(attributes);
+
+        geometry.center();
+
+        const material1 = new MeshPhysicalMaterial({
+            side : THREE.FrontSide,
+            vertexColors : THREE.VertexColors,
+            metalness : 0.0,
+            roughness : 0.0,
+            clearCoat : 1.0,
+            clearCoatRoughness : 1.0,
+            reflectivity : 1.0,
+            transparent : false,
+            opacity : 1,
+            clipShadows : true,
+            depthWrite : true
+        });
+
+        const material2 = new MeshPhysicalMaterial({
+            side : THREE.BackSide,
+            vertexColors : THREE.VertexColors,
+            metalness : 0.0,
+            roughness : 0.0,
+            clearCoat : 1.0,
+            clearCoatRoughness : 1.0,
+            reflectivity : 1.0,
+            transparent : false,
+            opacity : 1,
+            clipShadows : true,
+            depthWrite : true
+        });
+
+        geometry.scale( 0.65, 0.65, 0.65 );
+
+        const m1 = new THREE.Mesh(geometry, material1);
+
+        const m2 = new THREE.Mesh(geometry, material2);
+
+        m1.userData.transparent = true;
+
+        m2.userData.transparent = true;
+
+        m1.userData.dataType = "4";
+
+        m2.userData.dataType = "4";
+
+        m1.rotation.x = 2 * Math.PI;
+
+        m1.rotation.y = 2 * Math.PI;
+
+        m2.rotation.x = 2 * Math.PI;
+
+        m2.rotation.y = 2 * Math.PI;
+
+        const group = new THREE.Group();
+        
+        group.add(m1);
+        
         group.add(m2);
 
         group.userData.brain = true;
@@ -389,17 +502,19 @@ export class App extends Component<AppProps,AppState>{
 
                 const generator = customShaders ? generatorsShaders[dc] : generators[dc];
           
+                if( ! generator ){ return null }
+
                 const group = generator(attributes);
 
                 return group;
 
             } )
            
-            return meshes;
+            return meshes.filter(identity);
 
         } )
 
-        .then( models => {
+        .then( (models:any[]) => {
 
             const m = models.map( m => {
 

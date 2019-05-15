@@ -7,7 +7,7 @@ import { Vector3 } from 'three';
 type input = { 
   dims:{ x:number, y:number, z:number }, 
   scalars:number[],
-  color:boolean
+  datatypeCode:number
 };
 
 
@@ -316,8 +316,12 @@ export const marchingCubes = () : requestData => {
 
   return input => {
 
-    const { dims, scalars, color } = input;
-    
+    const { dims, scalars, datatypeCode } = input;
+
+    model.contourValue = datatypeCode===4 ? 180 : 1;
+
+    const color = datatypeCode===16;  
+
     const { x,y,z } = dims;
 
     const points = [];
@@ -328,9 +332,9 @@ export const marchingCubes = () : requestData => {
 
     const slice = x * y;
 
-    const spacing = [1,1,1];
+    const spacing = [ 1, 1, 1 ];
 
-    const origin = [0,0,0];
+    const origin = [ 0, 0, 0 ];
 
     const avg = c => {
 
@@ -339,7 +343,6 @@ export const marchingCubes = () : requestData => {
       return c.map(v => sum/c.length);
 
     }
-
 
     for (let k = 0; k < z - 1; ++k) {
       

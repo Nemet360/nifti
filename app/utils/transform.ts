@@ -4,6 +4,8 @@ import { niftiData } from "../types";
 import { transformPerfusionColors } from "./transformPerfusionColors";
 import { initializeColors } from "./initializeColors";
 import { mergeVertices } from "./mergeVertices";
+import { attributesToGeometry } from "./attributesToGeometry";
+import { smoothGeometry } from "./smoothGeometry";
 
 
 
@@ -25,19 +27,19 @@ export const transform = file => {
         
         const dims = { x : niftiHeader.dims[1], y : niftiHeader.dims[2], z : niftiHeader.dims[3] };
         
-        const result = requestData({ dims, scalars:niftiImage, color:niftiHeader.datatypeCode===16 })
+        const result = requestData({ dims, scalars:niftiImage, datatypeCode:niftiHeader.datatypeCode })
         
         const { colors, points, normals } = result;
 
         const rgb = colors ? transformPerfusionColors(colors) : initializeColors(points.length); 
 
-        const { out_index, out_position, out_color, out_normal } = mergeVertices( points, normals, rgb );
+        const data = mergeVertices( points, normals, rgb );
 
         return { 
-            index : out_index, 
-            position : out_position, 
-            color : out_color, 
-            normal : out_normal, 
+            index : data.out_index, 
+            position : data.out_position, 
+            color : data.out_color, 
+            normal : data.out_normal, 
             niftiHeader
         }
       
