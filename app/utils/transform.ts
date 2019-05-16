@@ -31,7 +31,7 @@ export const transform = file => {
         
         const { colors, points, normals } = result;
 
-        const rgb = colors ? transformPerfusionColors(colors) : initializeColors(points.length); 
+        const rgb = colors ? transformPerfusionColors(colors) : initializeColors(points.length, niftiHeader.datatypeCode); 
 
         const data = mergeVertices( points, normals, rgb );
 

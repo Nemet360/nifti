@@ -52,9 +52,458 @@ window['THREE'] = THREE;
 
 require('three/examples/js/math/Lut');
 
+
+
+const generators = {
+
+    "16" : attributes => {
+
+        const geometry = attributesToGeometry(attributes);
+
+        geometry.scale(0.95, 0.95, 0.95);
+
+        geometry.center();
+
+        const material1 = new MeshPhysicalMaterial({
+            side : THREE.DoubleSide,
+            vertexColors : THREE.VertexColors,
+            metalness : 0.0,
+            roughness : 0.5,
+            clearCoat : 0.5,
+            clearCoatRoughness : 0.5,
+            reflectivity : 0.3,
+            transparent : false,
+            opacity : 1.0,
+            depthWrite : true,
+            clipShadows : true
+        });
+
+        const m1 = new THREE.Mesh(geometry, material1);
+
+        m1.userData.dataType = "16";
+
+        const group = new THREE.Group();
+        
+        group.add(m1);
+
+        group.translateZ(7);
+
+        group.translateX(0.5);
+
+        group.userData.brain = true;
+
+        return group;
+
+    },
+
+    "2" : attributes => {
+
+        const geometry = attributesToGeometry(attributes);
+
+        geometry.center();
+
+        const material1 = new MeshPhysicalMaterial({
+            side : THREE.FrontSide,
+            vertexColors : THREE.VertexColors,
+            metalness : 0.0,
+            roughness : 0.0,
+            clearCoat : 1.0,
+            clearCoatRoughness : 1.0,
+            reflectivity : 1.0,
+            transparent : false,
+            opacity : 1,
+            clipShadows : true,
+            depthWrite : true
+        });
+
+        const material2 = new MeshPhysicalMaterial({
+            side : THREE.BackSide,
+            vertexColors : THREE.VertexColors,
+            metalness : 0.0,
+            roughness : 0.0,
+            clearCoat : 1.0,
+            clearCoatRoughness : 1.0,
+            reflectivity : 1.0,
+            transparent : true,
+            opacity : 1,
+            clipShadows : true,
+            depthWrite : false
+        });
+
+        const m1 = new THREE.Mesh(geometry, material1);
+
+        const m2 = new THREE.Mesh(geometry, material2);
+
+        m1.userData.transparent = true;
+
+        m2.userData.transparent = true;
+
+        m1.userData.dataType = "2";
+
+        m2.userData.dataType = "2";
+
+        const group = new THREE.Group();
+        
+        group.add(m1);
+
+        group.add(m2);
+
+        group.userData.brain = true;
+
+        return group;
+
+    },
+
+    "4" : attributes => {
+
+        const geometry = attributesToGeometry(attributes);
+
+        geometry.scale( 0.65, 0.65, 0.65 );
+
+        geometry.center();
+
+        const material1 = new MeshPhysicalMaterial({
+            side : THREE.FrontSide,
+            vertexColors : THREE.VertexColors,
+            metalness : 0.0,
+            roughness : 0.5,
+            clearCoat : 0.5,
+            clearCoatRoughness : 0.5,
+            reflectivity : 0.5,
+            transparent : false,
+            opacity : 1,
+            clipShadows : true,
+            depthWrite : true
+        });
+
+        const material2 = new MeshPhysicalMaterial({
+            side : THREE.BackSide,
+            vertexColors : THREE.VertexColors,
+            metalness : 0.0,
+            roughness : 0.5,
+            clearCoat : 0.5,
+            clearCoatRoughness : 0.5,
+            reflectivity : 0.5,
+            transparent : true,
+            opacity : 1,
+            clipShadows : true,
+            depthWrite : false
+        });
+
+        const m1 = new THREE.Mesh(geometry, material1);
+
+        const m2 = new THREE.Mesh(geometry, material2);
+
+        m1.userData.transparent = true;
+
+        m2.userData.transparent = true;
+
+        m1.userData.dataType = "4";
+
+        m2.userData.dataType = "4";
+
+        m1.rotation.x = 2 * Math.PI;
+
+        m1.rotation.y = 2 * Math.PI;
+
+        m2.rotation.x = 2 * Math.PI;
+
+        m2.rotation.y = 2 * Math.PI;
+
+        const group = new THREE.Group();
+        
+        group.add(m1);
+        
+        group.add(m2);
+
+        group.userData.brain = true;
+
+        return group;
+
+    }
+
+}
+
+
+
+interface AppProps{
+    data:any[]
+}
+
+
+
+interface AppState{
+    models:any[],
+    camera:PerspectiveCamera
+}
+
+
+
+export class App extends Component<AppProps,AppState>{
+    container:HTMLElement
+    subscriptions:Subscription[]
+    workers:Worker[]
+
+
+
+    constructor(props){ 
+
+        super(props);
+
+        this.subscriptions = [];
+
+        this.workers = [];
+
+        this.state = { 
+            models : [],
+            camera : new PerspectiveCamera(50, 1, 1, 2000) 
+        };
+
+    } 
+
+    
+
+    componentDidMount(){
+
+        const { data } = this.props;
+
+        const n = data.length - 1;
+
+        this.workers = Array.apply(null, Array(n)).map(v => new Worker('worker.js'));
+
+        
+        this.subscriptions.push(
+
+            fromEvent(document, 'drop').subscribe( (event:any) => {
+                
+                event.preventDefault(); 
+                event.stopPropagation();
+
+                const result = path(['dataTransfer','files'])(event);
+
+                console.log(result);
+                
+            } ),
+
+            merge(
+                fromEvent(document, 'dragover'), 
+                fromEvent(document, 'dragend'), 
+                fromEvent(document, 'dragexit'),
+                fromEvent(document, 'dragleave')
+            ).subscribe((e:any) => { 
+                e.preventDefault();
+                e.stopPropagation();
+            }),
+
+            fromEvent(ipcRenderer, "axial", event => event). subscribe( () => {
+
+                const c = new PerspectiveCamera(50, 1, 1, 2000);
+                
+                c.position.x = 0;
+                c.position.y = 0;
+                c.position.z = 200;
+
+                c.lookAt(new Vector3(0,0,0));
+
+                this.onViewChange(c);
+
+            } ),
+
+            fromEvent(ipcRenderer, "coronal", event => event). subscribe( () => {
+
+
+                const c = new PerspectiveCamera(50, 1, 1, 2000);
+                
+                c.position.x = 0;
+                c.position.y = 200;
+                c.position.z = 20;
+
+                c.lookAt(new Vector3(0,0,0));
+
+                this.onViewChange(c);
+
+            } ),
+
+            fromEvent(ipcRenderer, "sagittal", event => event).subscribe( () => {
+
+                const c = new PerspectiveCamera(50, 1, 1, 2000);
+                
+                c.position.x = 200;
+                c.position.y = 0;
+                c.position.z = 0;
+
+                c.lookAt(new Vector3(0,0,0));
+
+                this.onViewChange(c);
+
+            } ),
+
+        );
+        
+
+        this.generateMeshes(data);
+
+    }
+
+
+
+    componentWillUnmount(){
+
+        this.workers.forEach(worker => worker.terminate());
+
+        this.subscriptions.forEach(subscription => subscription.unsubscribe());
+
+        this.workers = [];
+
+        this.subscriptions = [];
+
+    }
+
+
+
+    generateMeshes = data => {
+
+        if( isEmpty(data) ){ return }
+
+        const first = data[0];
+
+        const remainder = data.slice(1, data.length);
+
+        const workers = this.workers.map( workerSend ).map( ( f, i ) => f( remainder[i] ) );
+
+        
+
+        return Promise.all([ transform(first), ...workers ])
+
+        .then( collection => {
+
+            const meshes = collection.map( attributes => {
+
+                const dc = attributes.niftiHeader.datatypeCode.toString();
+
+                const generator =  generators[dc]; //customShaders ? generatorsShaders[dc] : generators[dc];
+          
+                if( ! generator ){ return null }
+
+                const group = generator(attributes);
+
+                return group;
+
+            } )
+           
+            return meshes.filter(identity);
+
+        } )
+
+        .then( (models:any[]) => {
+
+            const m = models.slice(0,2).map( m => {
+
+                const group = new THREE.Group();
+    
+                models.forEach( m => group.add( m.clone() ) );
+
+                return group;
+
+            } );
+
+            this.setState({ models : m });
+
+        } )
+
+    }
+
+
+
+    onViewChange = (camera:PerspectiveCamera) => {
+
+        this.setState({ camera : camera.clone() })
+
+    }
+
+
+
+    render() {  
+
+        const { models, camera } = this.state;
+
+        return <div style={{width:"100%", height:"100%"}}>
+
+            { fragment_model_front }
+            { vertex_model_front }
+
+            { fragment_perfusion_front } 
+            { vertex_perfusion_front }
+
+            <div style={{
+                padding:"10px",
+                height:"calc(100% - 20px)", 
+                width:"calc(100% - 20px)",
+                display:'grid',
+                alignItems:'center',
+                justifyItems:'center',
+                gridGap:"10px",
+                gridTemplateColumns:`repeat(${2}, [col-start] 1fr)`
+            }}> 
+            {
+                models.map( (group,index) => 
+
+                    <div 
+                        key={`group-${index}`} 
+                        style={{width:"100%", height:"100%"}}
+                    >   
+                        <div 
+                            style={{
+                                height:"100%",
+                                width:"100%",
+                                display:"flex",
+                                flexDirection:"column",
+                                justifyContent:"space-between"
+                            }}
+                        >
+                            <Space 
+                                index={index}
+                                group={group} 
+                                onViewChange={this.onViewChange} 
+                                camera={camera}
+                            />
+                        </div>
+                    </div>
+
+                )
+            }
+            </div> 
+
+        </div>
+
+    }
+
+} 
+
+
+
+ipcRenderer.once("loaded", ( event, data ) => {
+
+    const app = document.createElement('div'); 
+
+    app.style.width = '100%';
+
+    app.style.height = '100%';
+
+    app.id = 'application';
+
+    document.body.appendChild(app);
+
+    const entry = <App data={data} />
+
+    ReactDOM.render( entry, app );
+
+});
+
+
+
+/*
 const customShaders = false;
-
-
 
 const generatorsShaders = {
 
@@ -178,443 +627,4 @@ const generatorsShaders = {
     }
 
 }
-
-
-
-const generators = {
-
-    "16" : attributes => {
-
-        const geometry = attributesToGeometry(attributes);
-
-        geometry.scale(0.95, 0.95, 0.95);
-
-        geometry.center();
-
-        const material1 = new MeshPhysicalMaterial({
-            side : THREE.DoubleSide,
-            vertexColors : THREE.VertexColors,
-            metalness : 0.0,
-            roughness : 0.5,
-            clearCoat : 0.5,
-            clearCoatRoughness : 0.5,
-            reflectivity : 0.3,
-            transparent : false,
-            opacity : 1.0,
-            depthWrite : true,
-            clipShadows : true
-        });
-
-        const m1 = new THREE.Mesh(geometry, material1);
-
-        m1.userData.dataType = "16";
-
-        const group = new THREE.Group();
-        
-        group.add(m1);
-
-        group.translateZ(7);
-
-        group.translateX(0.5);
-
-        group.userData.brain = true;
-
-        return group;
-
-    },
-
-    "2" : attributes => {
-
-        const geometry = attributesToGeometry(attributes);
-
-        geometry.center();
-
-        const material1 = new MeshPhysicalMaterial({
-            side : THREE.FrontSide,
-            vertexColors : THREE.VertexColors,
-            metalness : 0.0,
-            roughness : 0.0,
-            clearCoat : 1.0,
-            clearCoatRoughness : 1.0,
-            reflectivity : 1.0,
-            transparent : false,
-            opacity : 1,
-            clipShadows : true,
-            depthWrite : true
-        });
-
-        const material2 = new MeshPhysicalMaterial({
-            side : THREE.BackSide,
-            vertexColors : THREE.VertexColors,
-            metalness : 0.0,
-            roughness : 0.0,
-            clearCoat : 1.0,
-            clearCoatRoughness : 1.0,
-            reflectivity : 1.0,
-            transparent : false,
-            opacity : 1,
-            clipShadows : true,
-            depthWrite : true
-        });
-
-        const m1 = new THREE.Mesh(geometry, material1);
-
-        const m2 = new THREE.Mesh(geometry, material2);
-
-        m1.userData.transparent = true;
-
-        m2.userData.transparent = true;
-
-        m1.userData.dataType = "2";
-
-        m2.userData.dataType = "2";
-
-        const group = new THREE.Group();
-        
-        group.add(m1);
-
-        group.add(m2);
-
-        group.userData.brain = true;
-
-        return group;
-
-    },
-
-    "4" : attributes => {
-
-        const geometry = attributesToGeometry(attributes);
-
-        geometry.center();
-
-        const material1 = new MeshPhysicalMaterial({
-            side : THREE.FrontSide,
-            vertexColors : THREE.VertexColors,
-            metalness : 0.0,
-            roughness : 0.0,
-            clearCoat : 1.0,
-            clearCoatRoughness : 1.0,
-            reflectivity : 1.0,
-            transparent : false,
-            opacity : 1,
-            clipShadows : true,
-            depthWrite : true
-        });
-
-        const material2 = new MeshPhysicalMaterial({
-            side : THREE.BackSide,
-            vertexColors : THREE.VertexColors,
-            metalness : 0.0,
-            roughness : 0.0,
-            clearCoat : 1.0,
-            clearCoatRoughness : 1.0,
-            reflectivity : 1.0,
-            transparent : false,
-            opacity : 1,
-            clipShadows : true,
-            depthWrite : true
-        });
-
-        geometry.scale( 0.65, 0.65, 0.65 );
-
-        const m1 = new THREE.Mesh(geometry, material1);
-
-        const m2 = new THREE.Mesh(geometry, material2);
-
-        m1.userData.transparent = true;
-
-        m2.userData.transparent = true;
-
-        m1.userData.dataType = "4";
-
-        m2.userData.dataType = "4";
-
-        m1.rotation.x = 2 * Math.PI;
-
-        m1.rotation.y = 2 * Math.PI;
-
-        m2.rotation.x = 2 * Math.PI;
-
-        m2.rotation.y = 2 * Math.PI;
-
-        const group = new THREE.Group();
-        
-        group.add(m1);
-        
-        group.add(m2);
-
-        group.userData.brain = true;
-
-        return group;
-
-    }
-
-}
-
-
-
-interface AppProps{
-    data:any[]
-}
-
-
-
-interface AppState{
-    models:any[],
-    camera:PerspectiveCamera
-}
-
-
-
-export class App extends Component<AppProps,AppState>{
-    container:HTMLElement
-    subscriptions:Subscription[]
-    workers:Worker[]
-
-
-
-    constructor(props){ 
-
-        super(props);
-
-        this.subscriptions = [];
-
-        this.workers = [];
-
-        this.state = { 
-            models : [],
-            camera : new PerspectiveCamera(50, 1, 1, 2000) 
-        };
-
-    } 
-
-    
-
-    componentDidMount(){
-
-        const { data } = this.props;
-
-        const n = data.length - 1;
-
-        this.workers = Array.apply(null, Array(n)).map(v => new Worker('worker.js'));
-
-        
-        this.subscriptions.push(
-
-            fromEvent(document, 'drop').subscribe( event => {
-                
-                const result = path(['dataTransfer','files'])(event);
-
-                console.log(result);
-                
-            } ),
-
-            fromEvent(ipcRenderer, "axial", event => event). subscribe( () => {
-
-                console.log("axial");
-
-                const c = new PerspectiveCamera(50, 1, 1, 2000);
-                
-                c.position.x = 0;
-                c.position.y = 0;
-                c.position.z = 200;
-
-                c.lookAt(new Vector3(0,0,0));
-
-                this.onViewChange(c);
-
-            } ),
-
-            fromEvent(ipcRenderer, "coronal", event => event). subscribe( () => {
-
-                console.log("coronal");
-
-                const c = new PerspectiveCamera(50, 1, 1, 2000);
-                
-                c.position.x = 0;
-                c.position.y = 200;
-                c.position.z = 20;
-
-                c.lookAt(new Vector3(0,0,0));
-
-                this.onViewChange(c);
-
-            } ),
-
-            fromEvent(ipcRenderer, "sagittal", event => event).subscribe( () => {
-
-                console.log("sagittal");
-
-                const c = new PerspectiveCamera(50, 1, 1, 2000);
-                
-                c.position.x = 200;
-                c.position.y = 0;
-                c.position.z = 0;
-
-                c.lookAt(new Vector3(0,0,0));
-
-                this.onViewChange(c);
-
-            } ),
-
-        );
-        
-
-        this.generateMeshes(data);
-
-    }
-
-
-
-    componentWillUnmount(){
-
-        this.workers.forEach(worker => worker.terminate());
-
-        this.subscriptions.forEach(subscription => subscription.unsubscribe());
-
-        this.workers = [];
-
-        this.subscriptions = [];
-
-    }
-
-
-
-    generateMeshes = data => {
-
-        if( isEmpty(data) ){ return }
-
-        const first = data[0];
-
-        const remainder = data.slice(1, data.length);
-
-        const workers = this.workers.map( workerSend ).map( ( f, i ) => f( remainder[i] ) );
-
-        
-
-        return Promise.all([ transform(first), ...workers ])
-
-        .then( collection => {
-
-            const meshes = collection.map( attributes => {
-
-                const dc = attributes.niftiHeader.datatypeCode.toString();
-
-                const generator = customShaders ? generatorsShaders[dc] : generators[dc];
-          
-                if( ! generator ){ return null }
-
-                const group = generator(attributes);
-
-                return group;
-
-            } )
-           
-            return meshes.filter(identity);
-
-        } )
-
-        .then( (models:any[]) => {
-
-            const m = models.map( m => {
-
-                const group = new THREE.Group();
-    
-                models.forEach( m => group.add( m.clone() ) );
-
-                return group;
-
-            } );
-
-            this.setState({ models : m });
-
-        } )
-
-    }
-
-
-
-    onViewChange = (camera:PerspectiveCamera) => {
-
-        this.setState({ camera : camera.clone() })
-
-    }
-
-
-
-    render() {  
-
-        const { models, camera } = this.state;
-
-        return <div style={{width:"100%", height:"100%"}}>
-
-            { fragment_model_front }
-            { vertex_model_front }
-
-            { fragment_perfusion_front } 
-            { vertex_perfusion_front }
-
-            <div style={{
-                padding:"10px",
-                height:"calc(100% - 20px)", 
-                width:"calc(100% - 20px)",
-                display:'grid',
-                alignItems:'center',
-                justifyItems:'center',
-                gridGap:"10px",
-                gridTemplateColumns:`repeat(${2}, [col-start] 1fr)`
-            }}> 
-            {
-                models.map( (group,index) => 
-
-                    <div 
-                        key={`group-${index}`} 
-                        style={{width:"100%", height:"100%"}}
-                    >   
-                        <div 
-                            style={{
-                                height:"100%",
-                                width:"100%",
-                                display:"flex",
-                                flexDirection:"column",
-                                justifyContent:"space-between"
-                            }}
-                        >
-                            <Space 
-                                index={index}
-                                group={group} 
-                                onViewChange={this.onViewChange} 
-                                camera={camera}
-                            />
-                        </div>
-                    </div>
-
-                )
-            }
-            </div> 
-
-        </div>
-
-    }
-
-} 
-
-
-
-ipcRenderer.once("loaded", ( event, data ) => {
-
-    const app = document.createElement('div'); 
-
-    app.style.width = '100%';
-
-    app.style.height = '100%';
-
-    app.id = 'application';
-
-    document.body.appendChild(app);
-
-    const entry = <App data={data} />
-
-    ReactDOM.render( entry, app );
-
-});
+*/

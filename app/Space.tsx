@@ -40,6 +40,13 @@ const Spinner = require('react-spinkit');
 
 
 
+const transparencyEquations = {
+    "2" : x => 1 - Math.pow( Math.E, - 8 * Math.pow(x, 4) ), 
+    "4" : x => 1 - Math.pow( Math.E, - 3 * Math.pow(x, 4) )
+};
+
+
+
 interface SpaceProps{
     index:number,
     group:Mesh,
@@ -91,22 +98,28 @@ export class Space extends Component<SpaceProps,SpaceState>{
         
         const x = current/start;
 
-        const opacity = 1 - Math.pow( Math.E, - 12 * Math.pow(x, 8) );
-     
         this.props.group.traverse((mesh:any) => {
+            
+            const { dataType } = mesh.userData;
 
-            if(mesh.userData.transparent && mesh.userData.shader){
+            if( ! dataType ){ return }
 
-                mesh.material.uniforms.opacity.value = opacity < 0.25 ? 0.25 : opacity; 
+            const equation = transparencyEquations[dataType]; 
 
-            }else if(mesh.userData.transparent){
+            if( ! equation ){ return }
 
-                mesh.material['opacity'] = opacity < 0.25 ? 0.25 : opacity;
+            const opacity = equation(x);
 
-                mesh.material['transparent'] = true;
-
+            if(mesh.userData.transparent){
+               mesh.material['opacity'] = opacity;
+               mesh.material['transparent'] = true;
             }
 
+            /*
+            if(mesh.userData.transparent && mesh.userData.shader){
+                mesh.material.uniforms.opacity.value = opacity < 0.25 ? 0.25 : opacity; 
+            }
+            */
         });
 
     }
@@ -169,9 +182,9 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
         const hg = max.y - min.y;
 
-        const x = wd * 2;
+        const x = wd * 3;
 
-        const y = hg * 2;
+        const y = hg * 3;
 
         const z = 0;
 
