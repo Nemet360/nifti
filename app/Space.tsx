@@ -111,8 +111,23 @@ export class Space extends Component<SpaceProps,SpaceState>{
             const opacity = equation(x);
 
             if(mesh.userData.transparent){
-               mesh.material['opacity'] = opacity;
-               mesh.material['transparent'] = true;
+
+                mesh.material['opacity'] = opacity;
+
+                mesh.material['transparent'] = true;
+
+                /*
+                if(mesh.userData.front && mesh.userData.dataType==="2" && opacity < 0.7){
+
+                    mesh.material.depthWrite = false;
+
+                }else{
+
+                    mesh.material.depthWrite = true;
+
+                }
+                */
+
             }
 
             /*

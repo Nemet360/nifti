@@ -49,10 +49,6 @@ module.exports = env => {
         ]
       },
 
-      plugins : [
-        new CopyWebpackPlugin([{ from : "samples", to : "samples" }])
-      ],
-
       node: {
         __dirname: false,
         __filename: false,

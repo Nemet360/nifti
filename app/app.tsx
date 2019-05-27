@@ -60,7 +60,7 @@ const generators = {
 
         const geometry = attributesToGeometry(attributes);
 
-        geometry.scale(0.95, 0.95, 0.95);
+        geometry.scale(0.9, 0.9, 0.9);
 
         geometry.center();
 
@@ -91,6 +91,8 @@ const generators = {
         group.translateX(0.5);
 
         group.userData.brain = true;
+
+        group.userData.dataType = "16";
 
         return group;
 
@@ -149,6 +151,8 @@ const generators = {
         group.add(m2);
 
         group.userData.brain = true;
+
+        group.userData.dataType = "2";
 
         return group;
 
@@ -218,6 +222,8 @@ const generators = {
 
         group.userData.brain = true;
 
+        group.userData.dataType = "4";
+
         return group;
 
     }
@@ -265,13 +271,6 @@ export class App extends Component<AppProps,AppState>{
 
     componentDidMount(){
 
-        const { data } = this.props;
-
-        const n = data.length - 1;
-
-        this.workers = Array.apply(null, Array(n)).map(v => new Worker('worker.js'));
-
-        
         this.subscriptions.push(
 
             fromEvent(document, 'drop').subscribe( (event:any) => {
@@ -282,6 +281,8 @@ export class App extends Component<AppProps,AppState>{
                 const result = path(['dataTransfer','files'])(event);
 
                 console.log(result);
+
+                this.init([...result]);
                 
             } ),
 
@@ -339,7 +340,16 @@ export class App extends Component<AppProps,AppState>{
             } ),
 
         );
-        
+
+    }
+
+
+
+    init = data => {
+
+        const n = data.length - 1;
+
+        this.workers = Array.apply(null, Array(n)).map(v => new Worker('worker.js'));
 
         this.generateMeshes(data);
 
@@ -381,7 +391,7 @@ export class App extends Component<AppProps,AppState>{
 
                 const dc = attributes.niftiHeader.datatypeCode.toString();
 
-                const generator =  generators[dc]; //customShaders ? generatorsShaders[dc] : generators[dc];
+                const generator = generators[dc]; //customShaders ? generatorsShaders[dc] : generators[dc];
           
                 if( ! generator ){ return null }
 
@@ -397,11 +407,21 @@ export class App extends Component<AppProps,AppState>{
 
         .then( (models:any[]) => {
 
-            const m = models.slice(0,2).map( m => {
+            const m = models.filter(m => {
+               return m.userData.dataType === "16";
+            }).map( m => {
 
                 const group = new THREE.Group();
+
+                group.add(m.clone());
     
-                models.forEach( m => group.add( m.clone() ) );
+                models.forEach( m => {
+
+                    if(m.userData.dataType != "16"){
+                        group.add( m.clone() );
+                    }
+
+                } );
 
                 return group;
 
@@ -429,11 +449,11 @@ export class App extends Component<AppProps,AppState>{
 
         return <div style={{width:"100%", height:"100%"}}>
 
-            { fragment_model_front }
-            { vertex_model_front }
+            { /*fragment_model_front*/ }
+            { /*vertex_model_front*/ }
 
-            { fragment_perfusion_front } 
-            { vertex_perfusion_front }
+            { /*fragment_perfusion_front*/ } 
+            { /*vertex_perfusion_front*/ }
 
             <div style={{
                 padding:"10px",

@@ -22,13 +22,21 @@ const readNIFTI = (data) => {
 
 
 
+const makeSlice = (file, start, length) => {
+    
+    return file.slice(start, start + length);
+
+}
+
+
+
 export const readNIFTIFile = file => (
 
     new Promise(
 
         resolve => {
         
-            const blob = new Blob([new Uint8Array(file)]);
+            const blob = makeSlice(file, 0, file.size); //new Blob([new Uint8Array(file)]);
 
             const reader = new FileReader();
 

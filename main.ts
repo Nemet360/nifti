@@ -54,6 +54,7 @@ export let win = null;
 
 const onWindowLoaded = () => {
 
+  /*
   const folder = "samples";
 
   const files = fs.readdirSync(folder);
@@ -65,8 +66,9 @@ const onWindowLoaded = () => {
     return fs.readFileSync(p);
 
   });
+  */
 
-  win.webContents.send("loaded", data);
+  win.webContents.send("loaded");
 
   win.webContents.openDevTools();
 
