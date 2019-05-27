@@ -1,6 +1,7 @@
 const path = require("path");
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');      
+const webpack = require("webpack");
 
 
 
@@ -86,15 +87,17 @@ module.exports = env => [
       ]    
     },
      
-    target : "electron-renderer", //"web"
+    target : "web",
 
     plugins : [
+      new webpack.NamedModulesPlugin(),
+      new webpack.NamedChunksPlugin(),
       new CopyWebpackPlugin([{ from : "./app/assets" }]),
       new HtmlWebpackPlugin({
-          inject:true, 
-          title:"NIFTI Viewer",     
-          chunks:["app"],
-          filename:"app.html" 
+        inject:true, 
+        title:"NIFTI Viewer",     
+        chunks:["app"],
+        filename:"app.html" 
       })
     ],
 

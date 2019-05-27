@@ -5,38 +5,11 @@ import { Component } from "react";
 import { Subscription } from 'rxjs';
 import { fromEvent } from 'rxjs/observable/fromEvent'; 
 import * as THREE from "three";
-import { Vector3, WebGLRenderer, PerspectiveCamera, Scene, Light, Mesh, BufferGeometry, Geometry, Raycaster, Color, Matrix4, Box3 } from 'three';
+import { Vector3, WebGLRenderer, PerspectiveCamera, Scene, Light, Mesh, Box3 } from 'three';
 import { lights } from './utils/lights';
 import { OrbitControls } from './OrbitControls';
-import { isNil, isEmpty, compose, sort, drop, toPairs, divide, uniqBy, splitEvery, range, path, prop, flatten, clone } from 'ramda';
-import * as ReactDOM from 'react-dom';
-import { createStore } from "redux"; 
-import { ipcRenderer, remote } from 'electron';
-import Button from '@material-ui/core/Button';
-import AppBar from '@material-ui/core/AppBar';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography'; 
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
-import Slider from '@material-ui/lab/Slider';
-import { readNIFTIFile } from './utils/readNIFTIFile';
+import { isNil } from 'ramda';
 import { getObjectCenter } from './utils/getObjectCenter';
-import { exportJSON } from './utils/exportJSON';
-import { imageToTypedData } from './utils/imageToTypedData';
-import Paper from '@material-ui/core/Paper';
-import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast } from 'three-mesh-bvh';
-import { equalize } from './utils/equalize';
-import { mergeVertices } from './utils/mergeVertices';
-import { typeEquals } from './utils/typeEquals';
-import { filter, first, map } from 'rxjs/operators';
-import { workerSend } from './utils/workerSend';
-import { transform } from './utils/transform';
-import { initializeColors } from './utils/initializeColors';
-import { transformPerfusionColors } from './utils/transformPerfusionColors';
-import { measureTimePromise } from './utils/measureTimePromise';
-import { taubinSmooth } from './laplacian';
-import { Quaternion } from 'three';
-const Spinner = require('react-spinkit');
 
 
 
@@ -135,6 +108,7 @@ export class Space extends Component<SpaceProps,SpaceState>{
                 mesh.material.uniforms.opacity.value = opacity < 0.25 ? 0.25 : opacity; 
             }
             */
+           
         });
 
     }
@@ -307,9 +281,9 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
         renderer.setPixelRatio(window.devicePixelRatio);
         
-        //renderer.gammaInput = true;
+        renderer.gammaInput = true;
 
-        //renderer.gammaOutput = true;
+        renderer.gammaOutput = true;
 
         renderer.toneMapping = THREE.Uncharted2ToneMapping;
 
