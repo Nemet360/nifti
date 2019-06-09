@@ -9,6 +9,8 @@ export const smoothGeometry = (geometry, params={ passBand: 0.2, iters: 20 }) =>
 
     const b = splitEvery(3, geometry.attributes.position.array);
 
-    return flatten( taubinSmooth( a, b, params ) );
+    const c = taubinSmooth( a, b, params );
+
+    return flatten( c );
 
 }

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { smoothGeometry } from "./smoothGeometry";
 
 
 
@@ -15,7 +16,7 @@ export const attributesToGeometry = ({ index, position, color, normal, niftiHead
     geometry.addAttribute('normal', new THREE.BufferAttribute( new Float32Array(normal), 3) );
 
     geometry.computeBoundingBox();
-
+    
     return geometry;
 
 }

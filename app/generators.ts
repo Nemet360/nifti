@@ -13,26 +13,48 @@ export const generators = {
 
         console.log("16", attributes);
 
+        const material = 'MeshToonMaterial';
+
+        const parameters = {
+
+            'MeshToonMaterial':{ 
+                side : THREE.DoubleSide, 
+                vertexColors : THREE.VertexColors,
+                transparent : false, 
+                opacity : 1
+            },
+
+            'MeshPhongMaterial':{ 
+                side : THREE.DoubleSide, 
+                vertexColors : THREE.VertexColors,
+                transparent : false, 
+                opacity : 1
+            },
+
+            'MeshPhysicalMaterial':{
+                side : THREE.DoubleSide,
+                vertexColors : THREE.VertexColors,
+                metalness : 0.0,
+                roughness : 0.5,
+                clearCoat : 0.5,
+                clearCoatRoughness : 0.5,
+                reflectivity : 0.3,
+                transparent : false,
+                opacity : 1.0,
+                depthWrite : true,
+                clipShadows : true
+            }
+
+        };
+
         const geometry = attributesToGeometry(attributes);
 
         geometry.scale(0.95, 0.95, 0.95);
 
         geometry.center();
 
-        const material1 = new MeshPhysicalMaterial({
-            side : THREE.DoubleSide,
-            vertexColors : THREE.VertexColors,
-            metalness : 0.0,
-            roughness : 0.5,
-            clearCoat : 0.5,
-            clearCoatRoughness : 0.5,
-            reflectivity : 0.3,
-            transparent : false,
-            opacity : 1.0,
-            depthWrite : true,
-            clipShadows : true
-        });
-
+        const material1 = new THREE[material]( parameters[material] );
+        
         const m1 = new THREE.Mesh(geometry, material1);
 
         m1.userData.dataType = "16";
