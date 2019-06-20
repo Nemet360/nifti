@@ -27,19 +27,21 @@ export const transform = file => {
         
         const dims = { x : niftiHeader.dims[1], y : niftiHeader.dims[2], z : niftiHeader.dims[3] };
         
-        const result = requestData({ dims, scalars:niftiImage, datatypeCode:niftiHeader.datatypeCode })
+        const result = requestData({ name : file.name, dims, scalars:niftiImage, datatypeCode:niftiHeader.datatypeCode })
         
-        const { colors, points, normals } = result;
+        const { colors, points, normals, types } = result;
 
         const rgb = colors ? transformPerfusionColors(colors) : initializeColors(points.length, niftiHeader.datatypeCode); 
 
-        const data = mergeVertices( points, normals, rgb );
+        const data = mergeVertices( points, normals, rgb, types );
 
         return { 
+            name : file.name,
             index : data.out_index, 
             position : data.out_position, 
             color : data.out_color, 
             normal : data.out_normal, 
+            types : data.out_types,
             niftiHeader
         }
       

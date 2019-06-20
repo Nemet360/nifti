@@ -59,6 +59,8 @@ export const generators = {
 
         m1.userData.dataType = "16";
 
+        m1.userData.name = attributes.name;
+
         const group = new THREE.Group();
         
         group.add(m1);
@@ -70,6 +72,72 @@ export const generators = {
         group.userData.brain = true;
 
         group.userData.dataType = "16";
+
+        return group;
+
+    },
+
+    "2E" : attributes => {
+
+        const material = 'MeshPhysicalMaterial';
+
+        const parameters = {
+
+            'MeshToonMaterial':{ 
+                side : THREE.DoubleSide, 
+                vertexColors : THREE.VertexColors,
+                transparent : false, 
+                opacity : 1
+            },
+
+            'MeshPhongMaterial':{ 
+                side : THREE.DoubleSide, 
+                vertexColors : THREE.VertexColors,
+                transparent : false, 
+                opacity : 1
+            },
+
+            'MeshPhysicalMaterial':{
+                side : THREE.DoubleSide,
+                vertexColors : THREE.VertexColors,
+                metalness : 0.0,
+                roughness : 0.5,
+                clearCoat : 0.5,
+                clearCoatRoughness : 0.5,
+                reflectivity : 0.3,
+                transparent : false,
+                opacity : 1.0,
+                depthWrite : true,
+                clipShadows : true
+            }
+
+        };
+
+        console.log("2", attributes);
+
+        const geometry = attributesToGeometry(attributes);
+
+        geometry.center();
+
+        const material1 = new THREE[material]( parameters[material] );
+
+        const m1 = new THREE.Mesh(geometry, material1);
+
+        m1.userData.transparent = false;
+
+        m1.userData.dataType = "2";
+        
+        m1.userData.name = attributes.name;
+
+        const group = new THREE.Group();
+        
+        group.add(m1);
+
+        group.userData.brain = true;
+
+        group.userData.dataType = "2";
+        
+        group.userData.name = attributes.name;
 
         return group;
 
@@ -122,6 +190,10 @@ export const generators = {
         m1.userData.dataType = "2";
 
         m2.userData.dataType = "2";
+        
+        m1.userData.name = attributes.name;
+
+        m2.userData.name = attributes.name;
 
         const group = new THREE.Group();
         
@@ -132,6 +204,8 @@ export const generators = {
         group.userData.brain = true;
 
         group.userData.dataType = "2";
+
+        group.userData.name = attributes.name;
 
         return group;
 
@@ -186,6 +260,10 @@ export const generators = {
         m1.userData.dataType = "4";
 
         m2.userData.dataType = "4";
+
+        m1.userData.name = attributes.name;
+
+        m2.userData.name = attributes.name;
 
         m1.rotation.x = 2 * Math.PI;
 

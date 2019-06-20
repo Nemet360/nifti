@@ -204,8 +204,10 @@ export class App extends Component<AppProps,AppState>{
 
             const meshes = collection.map( attributes => {
 
-                const dc = attributes.niftiHeader.datatypeCode.toString();
+                let dc = attributes.niftiHeader.datatypeCode.toString();
 
+                if(attributes.name==="wBRODMANN_SubCort_WM.nii"){ dc+='E' }
+                
                 const generator = generators[dc];
 
                 console.log(dc, generator);
@@ -224,33 +226,55 @@ export class App extends Component<AppProps,AppState>{
 
         .then( (models:any[]) => {
 
-            this.setState({ 
-                
-                models : models
-            
-                .filter( m => m.userData.dataType === '16' )
-                
-                .map( m => {
-    
-                    const group = new THREE.Group();
-    
-                    group.add(m.clone());
-        
-                    models.forEach( m => {
-    
-                        if(m.userData.dataType !== "16"){
-    
-                            group.add( m.clone() );
-    
-                        }
-    
-                    } );
-    
-                    return group;
-    
-                } )
+            if(true){
 
-            });
+                this.setState({ 
+                    
+                    models : models
+                    
+                    .filter(m => m.userData.name==="wBRODMANN_SubCort_WM.nii")
+                    
+                    .map( atlas => {
+        
+                        console.log(atlas);
+
+                        return atlas;
+        
+                    } )
+
+                });
+
+            }else{
+
+                this.setState({ 
+                    
+                    models : models
+                
+                    .filter( m => m.userData.dataType === '16' )
+                    
+                    .map( m => {
+        
+                        const group = new THREE.Group();
+        
+                        group.add(m.clone());
+            
+                        models.forEach( m => {
+        
+                            if(m.userData.dataType !== '16'){
+        
+                                group.add( m.clone() );
+        
+                            }
+        
+                        } );
+        
+                        return group;
+        
+                    } )
+
+                });
+
+            }
 
         } )
 

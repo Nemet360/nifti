@@ -1,10 +1,11 @@
 import caseTable from './caseTable';
 import { normalize } from './utils/normalize';
-import { Vector3 } from 'three';
+import { mode } from './utils/mode';
 
 
 
 type input = { 
+  name:string,
   dims:{ x:number, y:number, z:number }, 
   scalars:number[],
   datatypeCode:number
@@ -15,7 +16,8 @@ type input = {
 type output = { 
   normals:any[], 
   points:any[], 
-  colors:any[]
+  colors:any[],
+  types:any[]
 };
 
 
@@ -217,6 +219,7 @@ export const marchingCubes = () : requestData => {
     const points = [];
     const normals = [];
     const colors = [];
+    const types = [];
 
     const xyz = [];
 
@@ -292,11 +295,15 @@ export const marchingCubes = () : requestData => {
 
           normalize(n);
 
+          const type = mode(voxelScalars);
+
           normals.push(n[0], n[1], n[2]);
 
           points.push(xyz[0], xyz[1], xyz[2])
 
           colors.push( (voxelScalars[edgeVerts[1]] + voxelScalars[edgeVerts[0]]) / 2 );
+
+          types.push(type);
         
         }
 
@@ -307,7 +314,8 @@ export const marchingCubes = () : requestData => {
     return {
       p:points,
       n:normals,
-      c:colors
+      c:colors,
+      t:types
     }
 
   };
@@ -316,11 +324,11 @@ export const marchingCubes = () : requestData => {
 
   return input => {
 
-    const { dims, scalars, datatypeCode } = input;
+    const { dims, scalars, datatypeCode, name } = input;
 
-    model.contourValue = datatypeCode===4 ? 180 : 1;
+    model.contourValue = name==="wBRODMANN_SubCort_WM.nii" ? 1 : datatypeCode===4 ? 180 : 1;
 
-    const color = datatypeCode===16;  
+    const color = datatypeCode===16;
 
     const { x,y,z } = dims;
 
@@ -329,6 +337,8 @@ export const marchingCubes = () : requestData => {
     const normals = [];
 
     const colors = color ? [] : null;
+
+    const types = [];
 
     const slice = x * y;
 
@@ -364,7 +374,7 @@ export const marchingCubes = () : requestData => {
 
           if(result && result.p.length > 0){
 
-            const { p, n, c } = result;
+            const { p, n, c, t } = result;
 
             points.push(...p);
 
@@ -375,6 +385,8 @@ export const marchingCubes = () : requestData => {
               colors.push(...avg(c));
 
             }
+
+            types.push(...t);
 
           }
 
@@ -387,7 +399,8 @@ export const marchingCubes = () : requestData => {
     return { 
       colors, 
       points, 
-      normals
+      normals,
+      types
     } as output
 
   }
