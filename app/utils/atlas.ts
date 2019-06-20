@@ -1,0 +1,1 @@
+export const atlas_name = "wBRODMANN_SubCort_WM.nii";

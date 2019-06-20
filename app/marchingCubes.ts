@@ -1,6 +1,7 @@
 import caseTable from './caseTable';
 import { normalize } from './utils/normalize';
 import { mode } from './utils/mode';
+import { atlas_name } from './utils/atlas';
 
 
 
@@ -326,7 +327,21 @@ export const marchingCubes = () : requestData => {
 
     const { dims, scalars, datatypeCode, name } = input;
 
-    model.contourValue = name==="wBRODMANN_SubCort_WM.nii" ? 1 : datatypeCode===4 ? 180 : 1;
+    model.contourValue = 1;
+    
+    if(name===atlas_name){
+
+      model.contourValue = 1;
+
+    }else if(datatypeCode===4){ 
+
+      model.contourValue = 180; 
+
+    }else{
+
+      model.contourValue = 1;
+
+    }
 
     const color = datatypeCode===16;
 

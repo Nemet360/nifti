@@ -2,7 +2,7 @@ import './assets/fonts/index.css';
 import './assets/styles.css'; 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { isEmpty, path, identity } from 'ramda';
+import { isEmpty, path, identity, contains } from 'ramda';
 import { Component } from "react"; 
 import { Subscription } from 'rxjs';
 import { fromEvent } from 'rxjs/observable/fromEvent'; 
@@ -15,6 +15,13 @@ import { Space } from './Space';
 import { merge } from 'rxjs/observable/merge';
 import { filter } from 'rxjs/operators';
 import { generators } from './generators';
+import Input from '@material-ui/core/Input';
+import InputLabel from '@material-ui/core/InputLabel';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import { regions } from './utils/regions';
+import { atlas_name } from './utils/atlas';
 THREE.BufferGeometry.prototype['computeBoundsTree'] = computeBoundsTree;
 THREE.BufferGeometry.prototype['disposeBoundsTree'] = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -35,7 +42,8 @@ interface AppProps{}
 
 interface AppState{
     models:any[],
-    camera:PerspectiveCamera
+    camera:PerspectiveCamera,
+    region:any
 }
 
 
@@ -57,7 +65,8 @@ export class App extends Component<AppProps,AppState>{
 
         this.state = { 
             models : [],
-            camera : new PerspectiveCamera(50, 1, 1, 2000) 
+            camera : new PerspectiveCamera(50, 1, 1, 2000),
+            region : 140 
         };
 
     } 
@@ -91,6 +100,24 @@ export class App extends Component<AppProps,AppState>{
             fromEvent(window, "keydown", event => event).pipe( filter(e => String.fromCharCode( e.which )==='S' ) ).subscribe( this.sagittal )
 
         );
+
+    }
+
+
+
+    updateAtlasState = region => {
+
+    }
+    
+
+
+    componentDidUpdate(prevProps, prevState){
+
+        if(prevState.region!==this.state.region){
+
+            this.updateAtlasState(this.state.region);
+
+        }
 
     }
 
@@ -206,7 +233,7 @@ export class App extends Component<AppProps,AppState>{
 
                 let dc = attributes.niftiHeader.datatypeCode.toString();
 
-                if(attributes.name==="wBRODMANN_SubCort_WM.nii"){ dc+='E' }
+                if(attributes.name===atlas_name){ dc+='E' }
                 
                 const generator = generators[dc];
 
@@ -232,7 +259,7 @@ export class App extends Component<AppProps,AppState>{
                     
                     models : models
                     
-                    .filter(m => m.userData.name==="wBRODMANN_SubCort_WM.nii")
+                    .filter(m => m.userData.name===atlas_name)
                     
                     .map( atlas => {
         
@@ -294,8 +321,38 @@ export class App extends Component<AppProps,AppState>{
 
         const { models, camera } = this.state;
 
-        return <div style={{width:"100%", height:"100%"}}>
+        const names = models.map(m => m.userData.name);
 
+        console.log(names, atlas_name);
+
+        const displaySelector = contains(atlas_name)(names);
+
+
+        return <div style={{width:"100%", height:"100%"}}>
+            { 
+                displaySelector &&
+                <div style={{
+                    position: "absolute",
+                    zIndex: 22,
+                    padding: "50px"
+                }}> 
+                    <FormControl style={{width:"100%"}}>
+
+                        <InputLabel htmlFor='region-input'>Select region</InputLabel>
+
+                        <Select
+                            value={this.state.region}
+                            onChange={event => this.setState({region:event.target.value})}
+                            inputProps={{name: 'region', id: 'region-input'}}
+                        >
+                        {
+                            regions.map((item,index:number) => <MenuItem style={{fontWeight:500}} key={`item-${index}`} value={item.value}>{item.name}</MenuItem>)
+                        }
+                        </Select>
+
+                    </FormControl>
+                </div>
+            }
             <div style={{
                 padding:"10px",
                 height:"calc(100% - 20px)", 

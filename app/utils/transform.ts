@@ -6,10 +6,11 @@ import { initializeColors } from "./initializeColors";
 import { mergeVertices } from "./mergeVertices";
 import { attributesToGeometry } from "./attributesToGeometry";
 import { smoothGeometry } from "./smoothGeometry";
+import { atlas_name } from "./atlas";
 
 
 
-export const transform = file => {
+export const transform = (file) => {
 
     if( ! file ){
 
@@ -32,6 +33,22 @@ export const transform = file => {
         const { colors, points, normals, types } = result;
 
         const rgb = colors ? transformPerfusionColors(colors) : initializeColors(points.length, niftiHeader.datatypeCode); 
+
+        const skipMergeVertices = atlas_name===file.name;
+
+        if(skipMergeVertices){
+
+            return { 
+                name : file.name,
+                index : null, 
+                position : points, 
+                color : rgb, 
+                normal : normals, 
+                types,
+                niftiHeader
+            }
+
+        }
 
         const data = mergeVertices( points, normals, rgb, types );
 
