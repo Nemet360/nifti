@@ -1,8 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Component } from "react"; 
+import { toPairs } from 'ramda';
 import * as THREE from "three";
-import { PerspectiveCamera, MeshPhysicalMaterial, Vector3 } from 'three';
+import { MeshPhysicalMaterial } from 'three';
 import { attributesToGeometry } from './utils/attributesToGeometry';
 
 
@@ -12,24 +13,22 @@ const atlasMeshGenerator = attributes => {
     const material = 'MeshPhysicalMaterial';
 
     const parameters = {
-
         'MeshToonMaterial':{ 
             side : THREE.DoubleSide, 
             vertexColors : THREE.VertexColors,
             transparent : false, 
             opacity : 1
         },
-
         'MeshPhongMaterial':{ 
             side : THREE.DoubleSide, 
             vertexColors : THREE.VertexColors,
             transparent : false, 
             opacity : 1
         },
-
         'MeshPhysicalMaterial':{
             side : THREE.DoubleSide,
-            vertexColors : THREE.VertexColors,
+            color : '#aa8822',
+            //vertexColors : THREE.VertexColors,
             metalness : 0.0,
             roughness : 0.5,
             clearCoat : 0.5,
@@ -40,45 +39,146 @@ const atlasMeshGenerator = attributes => {
             depthWrite : true,
             clipShadows : true
         }
-
     };
 
-    console.log("2", attributes);
+    const points = {};
 
-    /*
-    TODO split points
-    */
-
-    const geometry = new THREE.BufferGeometry();
-
-    geometry.addAttribute('position', new THREE.BufferAttribute( new Float32Array(attributes.position), 3) );
-
-    geometry.addAttribute('color', new THREE.BufferAttribute( new Float32Array(attributes.color), 3) );
-
-    geometry.addAttribute('normal', new THREE.BufferAttribute( new Float32Array(attributes.normal), 3) );
-
-    geometry.computeBoundingBox();
+    for(let i = 0; i < attributes.position.length; i += 9){
     
-    geometry.center();
+        const t = attributes.types[i];
 
-    const material1 = new THREE[material]( parameters[material] );
+        if(points[t]){
 
-    const m1 = new THREE.Mesh(geometry, material1);
+            points[t].position.push(
+                attributes.position[i],
+                attributes.position[i+1],
+                attributes.position[i+2],
 
-    m1.userData.transparent = false;
+                attributes.position[i+3],
+                attributes.position[i+4],
+                attributes.position[i+5],
 
-    m1.userData.dataType = "2";
-    
-    m1.userData.name = attributes.name;
+                attributes.position[i+6],
+                attributes.position[i+7],
+                attributes.position[i+8]
+            );
+
+            points[t].normal.push(
+                attributes.normal[i],
+                attributes.normal[i+1],
+                attributes.normal[i+2],
+
+                attributes.normal[i+3],
+                attributes.normal[i+4],
+                attributes.normal[i+5],
+
+                attributes.normal[i+6],
+                attributes.normal[i+7],
+                attributes.normal[i+8],
+            );
+
+            points[t].color.push(
+                attributes.color[i],
+                attributes.color[i+1],
+                attributes.color[i+2],
+
+                attributes.color[i+3],
+                attributes.color[i+4],
+                attributes.color[i+5],
+
+                attributes.color[i+6],
+                attributes.color[i+7],
+                attributes.color[i+8]
+            );
+
+        }else{
+
+            points[t] = { 
+                position:[
+                    attributes.position[i],
+                    attributes.position[i+1],
+                    attributes.position[i+2],
+
+                    attributes.position[i+3],
+                    attributes.position[i+4],
+                    attributes.position[i+5],
+
+                    attributes.position[i+6],
+                    attributes.position[i+7],
+                    attributes.position[i+8]
+                ], normal:[
+                    attributes.normal[i],
+                    attributes.normal[i+1],
+                    attributes.normal[i+2],
+
+                    attributes.normal[i+3],
+                    attributes.normal[i+4],
+                    attributes.normal[i+5],
+
+                    attributes.normal[i+6],
+                    attributes.normal[i+7],
+                    attributes.normal[i+8],
+                ], 
+                color:[
+                    attributes.color[i],
+                    attributes.color[i+1],
+                    attributes.color[i+2],
+
+                    attributes.color[i+3],
+                    attributes.color[i+4],
+                    attributes.color[i+5],
+
+                    attributes.color[i+6],
+                    attributes.color[i+7],
+                    attributes.color[i+8]
+                ] 
+            };
+
+        }
+
+    }
 
     const group = new THREE.Group();
-    
-    group.add(m1);
 
+    const pairs = toPairs(points);
+
+    pairs.forEach( ( [ type, { position, normal, color } ], index ) => {
+
+        const geometry = new THREE.BufferGeometry();
+
+        geometry.addAttribute('position', new THREE.BufferAttribute( new Float32Array(position), 3) );
+    
+        //geometry.addAttribute('color', new THREE.BufferAttribute( new Float32Array(color), 3) );
+    
+        //geometry.addAttribute('normal', new THREE.BufferAttribute( new Float32Array(normal), 3) );
+    
+        geometry.computeBoundingBox();
+        
+        geometry.center();
+    
+        const material1 = new THREE[material]( parameters[material] );
+    
+        const m1 = new THREE.Mesh(geometry, material1);
+    
+        m1.userData.transparent = false;
+
+        m1.userData.type = type;
+    
+        m1.userData.dataType = "2";
+        
+        m1.userData.name = attributes.name;
+
+        group.add(m1);
+
+    } );
+    
+    
     group.userData.brain = true;
 
     group.userData.dataType = "2";
     
+    group.userData.atlas = true;
+
     group.userData.name = attributes.name;
 
     return group;
@@ -163,67 +263,54 @@ export const generators = {
 
         console.log("2", attributes);
 
+        const material = 'MeshPhongMaterial';
+
+        const parameters = {
+            'MeshToonMaterial':{ 
+                side : THREE.DoubleSide, 
+                vertexColors : THREE.VertexColors,
+                transparent : false, 
+                opacity : 1
+            },
+            'MeshPhongMaterial':{ 
+                side : THREE.DoubleSide, 
+                vertexColors : THREE.VertexColors,
+                transparent : false, 
+                opacity : 1
+            },
+            'MeshPhysicalMaterial':{
+                side : THREE.DoubleSide,
+                color : '#aa8822',
+                //vertexColors : THREE.VertexColors,
+                metalness : 0.0,
+                roughness : 0.5,
+                clearCoat : 0.5,
+                clearCoatRoughness : 0.5,
+                reflectivity : 0.3,
+                transparent : false,
+                opacity : 1.0,
+                depthWrite : true,
+                clipShadows : true
+            }
+        };
+
         const geometry = attributesToGeometry(attributes);
 
         geometry.center();
 
-        const material1 = new MeshPhysicalMaterial({
-            side : THREE.FrontSide,
-            vertexColors : THREE.VertexColors,
-            metalness : 0.0,
-            roughness : 0.0,
-            clearCoat : 1.0,
-            clearCoatRoughness : 1.0,
-            reflectivity : 1.0,
-            transparent : false,
-            opacity : 1,
-            clipShadows : true,
-            depthWrite : true
-        });
-
-        const material2 = new MeshPhysicalMaterial({
-            side : THREE.BackSide,
-            vertexColors : THREE.VertexColors,
-            metalness : 0.0,
-            roughness : 0.0,
-            clearCoat : 1.0,
-            clearCoatRoughness : 1.0,
-            reflectivity : 1.0,
-            transparent : true,
-            opacity : 1,
-            clipShadows : true,
-            depthWrite : false
-        });
+        const material1 = new THREE[material]( parameters[material] );
 
         const m1 = new THREE.Mesh(geometry, material1);
 
-        const m2 = new THREE.Mesh(geometry, material2);
-
-        m1.userData.transparent = true;
-
-        m2.userData.transparent = true;
+        m1.userData.transparent = false;
 
         m1.userData.dataType = "2";
-
-        m2.userData.dataType = "2";
         
         m1.userData.name = attributes.name;
 
-        m2.userData.name = attributes.name;
+        m1.userData.brain = true;
 
-        const group = new THREE.Group();
-        
-        group.add(m1);
-
-        group.add(m2);
-
-        group.userData.brain = true;
-
-        group.userData.dataType = "2";
-
-        group.userData.name = attributes.name;
-
-        return group;
+        return m1;
 
     },
 

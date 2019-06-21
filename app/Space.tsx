@@ -219,6 +219,8 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
         this.scene = this.setupScene();
 
+        window['scenes'] = [this.scene];
+
         this.camera = this.setupCamera(this.container);
      
         this.renderer = this.setupRenderer(this.container);

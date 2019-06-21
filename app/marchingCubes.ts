@@ -9,7 +9,8 @@ type input = {
   name:string,
   dims:{ x:number, y:number, z:number }, 
   scalars:number[],
-  datatypeCode:number
+  datatypeCode:number,
+  contourValue:number
 };
 
 
@@ -207,6 +208,7 @@ export const marchingCubes = () : requestData => {
 
   const produceTriangles = ({
     cVal,
+    precise,
     i,
     j,
     k,
@@ -247,9 +249,21 @@ export const marchingCubes = () : requestData => {
 
     for (let idx = 0; idx < 8; idx++) {
 
-      if (voxelScalars[VERT_MAP[idx]] >= cVal) {
+      if(precise){
+        
+        if (voxelScalars[VERT_MAP[idx]] === cVal) {
 
-        index |= CASE_MASK[idx];
+          index |= CASE_MASK[idx];
+  
+        }
+
+      }else{
+
+        if (voxelScalars[VERT_MAP[idx]] >= cVal) {
+
+          index |= CASE_MASK[idx];
+  
+        }
 
       }
 
@@ -304,7 +318,7 @@ export const marchingCubes = () : requestData => {
 
           colors.push( (voxelScalars[edgeVerts[1]] + voxelScalars[edgeVerts[0]]) / 2 );
 
-          types.push(type);
+          types.push(type, type, type);
         
         }
 
@@ -325,11 +339,15 @@ export const marchingCubes = () : requestData => {
 
   return input => {
 
-    const { dims, scalars, datatypeCode, name } = input;
+    const { dims, scalars, datatypeCode, name, contourValue } = input;
 
     model.contourValue = 1;
     
-    if(name===atlas_name){
+    if(contourValue){
+
+      model.contourValue = contourValue;
+
+    }else if(name===atlas_name){
 
       model.contourValue = 1;
 
@@ -377,6 +395,7 @@ export const marchingCubes = () : requestData => {
           
           const result = produceTriangles({
             cVal:model.contourValue,
+            precise:contourValue,
             i,
             j,
             k,

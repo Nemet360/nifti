@@ -12,8 +12,8 @@ const sendMessage = postMessage as any;
 onmessage = (e) => {
 
     const file = e.data; 
-
-    transform(file)
+    
+    transform(file, [])
     
     .then(
 

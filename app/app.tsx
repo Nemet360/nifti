@@ -15,7 +15,6 @@ import { Space } from './Space';
 import { merge } from 'rxjs/observable/merge';
 import { filter } from 'rxjs/operators';
 import { generators } from './generators';
-import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
@@ -107,6 +106,27 @@ export class App extends Component<AppProps,AppState>{
 
     updateAtlasState = region => {
 
+        const scene = window['scenes'][0];
+        const object = scene.children.find(mesh => mesh.userData.atlas);
+
+        object.children.forEach(obj => {
+
+            if(obj.userData.type==region){
+                
+                obj.material['opacity'] = 1;
+
+                obj.material['transparent'] = false;
+
+            }else{
+
+                obj.material['opacity'] = 0.1;
+
+                obj.material['transparent'] = true;
+
+            }
+
+        })
+
     }
     
 
@@ -130,8 +150,6 @@ export class App extends Component<AppProps,AppState>{
         event.stopPropagation();
 
         const result = path(['dataTransfer','files'])(event);
-
-        console.log(result);
 
         this.init([...result]);
         
@@ -217,91 +235,49 @@ export class App extends Component<AppProps,AppState>{
 
         if( isEmpty(data) ){ return }
 
-        const first = data[0];
+        const values = regions.map(item => item.value);
 
-        const remainder = data.slice(1, data.length);
+        const file = data[0];
 
-        const workers = this.workers.map( workerSend ).map( ( f, i ) => f( remainder[i] ) );
 
-        
 
-        return Promise.all([ transform(first), ...workers ])
+        if(file.name!==atlas_name){ return }
 
-        .then( collection => {
 
-            const meshes = collection.map( attributes => {
 
-                let dc = attributes.niftiHeader.datatypeCode.toString();
+        return transform(file, values)
 
-                if(attributes.name===atlas_name){ dc+='E' }
+        .then( attributes => {
+
+            const g = new THREE.Group();
+
+            attributes.forEach(item => {
+
+                let dc = item.niftiHeader.datatypeCode.toString();
                 
                 const generator = generators[dc];
-
-                console.log(dc, generator);
-          
+            
                 if( ! generator ){ return null }
 
-                const group = generator(attributes);
+                const group = generator(item);
 
-                return group;
+                group.userData.type = item.type; 
 
-            } )
-           
-            return meshes.filter(identity);
+                g.add(group);
 
+            });
+
+            g.userData.name = atlas_name;
+
+            g.userData.atlas = true;
+
+            return g;
+        
         } )
 
-        .then( (models:any[]) => {
+        .then( (model:any) => {
 
-            if(true){
-
-                this.setState({ 
-                    
-                    models : models
-                    
-                    .filter(m => m.userData.name===atlas_name)
-                    
-                    .map( atlas => {
-        
-                        console.log(atlas);
-
-                        return atlas;
-        
-                    } )
-
-                });
-
-            }else{
-
-                this.setState({ 
-                    
-                    models : models
-                
-                    .filter( m => m.userData.dataType === '16' )
-                    
-                    .map( m => {
-        
-                        const group = new THREE.Group();
-        
-                        group.add(m.clone());
-            
-                        models.forEach( m => {
-        
-                            if(m.userData.dataType !== '16'){
-        
-                                group.add( m.clone() );
-        
-                            }
-        
-                        } );
-        
-                        return group;
-        
-                    } )
-
-                });
-
-            }
+            this.setState({ models : [model] });
 
         } )
 
@@ -323,8 +299,6 @@ export class App extends Component<AppProps,AppState>{
 
         const names = models.map(m => m.userData.name);
 
-        console.log(names, atlas_name);
-
         const displaySelector = contains(atlas_name)(names);
 
 
@@ -334,7 +308,8 @@ export class App extends Component<AppProps,AppState>{
                 <div style={{
                     position: "absolute",
                     zIndex: 22,
-                    padding: "50px"
+                    padding: "50px",
+                    width: "200px"
                 }}> 
                     <FormControl style={{width:"100%"}}>
 
