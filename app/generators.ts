@@ -5,6 +5,7 @@ import { toPairs } from 'ramda';
 import * as THREE from "three";
 import { MeshPhysicalMaterial } from 'three';
 import { attributesToGeometry } from './utils/attributesToGeometry';
+import { getRandomColor } from './utils/getRandomColor';
 
 
 
@@ -263,12 +264,21 @@ export const generators = {
 
         console.log("2", attributes);
 
-        const material = 'MeshPhongMaterial';
+        const material = 'MeshPhysicalMaterial';
+        
+        const color = getRandomColor();
 
         const parameters = {
+            'MeshLambertMaterial': {
+                color : parseInt(getRandomColor().replace(/^#/, ''), 16),
+                emissive : parseInt(getRandomColor().replace(/^#/, ''), 16),
+                emissiveIntensity : 0.5,
+                side : THREE.DoubleSide,
+                reflectivity : 0.5
+            },
             'MeshToonMaterial':{ 
                 side : THREE.DoubleSide, 
-                vertexColors : THREE.VertexColors,
+                //vertexColors : THREE.VertexColors,
                 transparent : false, 
                 opacity : 1
             },
@@ -280,13 +290,13 @@ export const generators = {
             },
             'MeshPhysicalMaterial':{
                 side : THREE.DoubleSide,
-                color : '#aa8822',
+                color : parseInt(color.replace(/^#/, ''), 16),
                 //vertexColors : THREE.VertexColors,
                 metalness : 0.0,
-                roughness : 0.5,
+                roughness : 0.0,
                 clearCoat : 0.5,
-                clearCoatRoughness : 0.5,
-                reflectivity : 0.3,
+                clearCoatRoughness : 0.0,
+                reflectivity : 0.6,
                 transparent : false,
                 opacity : 1.0,
                 depthWrite : true,

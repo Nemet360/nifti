@@ -312,7 +312,15 @@ export const marchingCubes = () : requestData => {
 
           const type = mode(voxelScalars);
 
-          normals.push(n[0], n[1], n[2]);
+          if(n[0]==0 && n[1]===0 && n[2]===0 && precise){
+
+            normals.push(0.5, 0.5, 0.5);
+
+          }else{
+
+            normals.push(n[0], n[1], n[2]);
+
+          }
 
           points.push(xyz[0], xyz[1], xyz[2])
 

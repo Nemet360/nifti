@@ -21,6 +21,7 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import { regions } from './utils/regions';
 import { atlas_name } from './utils/atlas';
+import { getRandomColor } from './utils/getRandomColor';
 THREE.BufferGeometry.prototype['computeBoundsTree'] = computeBoundsTree;
 THREE.BufferGeometry.prototype['disposeBoundsTree'] = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
@@ -117,11 +118,25 @@ export class App extends Component<AppProps,AppState>{
 
                 obj.material['transparent'] = false;
 
+                obj.material['depthWrite'] = true;
+
+                const color = getRandomColor();
+
+                //obj.material.color.setHex(parseInt(color.replace(/^#/, ''), 16)); 
+
+                obj.material.color.setHex(0xff0000); 
+
             }else{
 
                 obj.material['opacity'] = 0.1;
 
                 obj.material['transparent'] = true;
+
+                obj.material['depthWrite'] = false;
+
+                //const color = getRandomColor();
+
+                //obj.material.color.setHex(parseInt(color.replace(/^#/, ''), 16)); 
 
             }
 
