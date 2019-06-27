@@ -1,5 +1,6 @@
 import { equalize } from "./equalize";
 import * as THREE from "three";
+import { isNil } from 'ramda';
 
 
 
@@ -19,8 +20,18 @@ export const transformPerfusionColors = colors => {
 
         const color = lut.getColor( equalized[i] );
 
-        rgb.push(color.r, color.g, color.b);
+        if(isNil(color)){
 
+           console.log('reason', equalized[i]);
+
+           rgb.push(0.5, 0.5, 0.5);
+
+        }else{
+
+           rgb.push(color.r, color.g, color.b);
+
+        }
+        
     }
 
     return rgb;

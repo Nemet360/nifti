@@ -1,11 +1,12 @@
 
-export const mergeVertices = (position:number[], normal:number[], colors:number[]) => {
+export const mergeVertices = (position:number[], normal:number[], colors:number[], types:number[]) => {
 
     const hash = {};
     const out_position = [];
     const out_color = [];
     const out_normal = [];
     const out_index = [];
+    const out_type = [];
 
     let x = 0;
     let y = 0;
@@ -18,6 +19,10 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
     let r = 0;
     let g = 0;
     let b = 0;
+
+    let t1 = 0;
+    let t2 = 0;
+    let t3 = 0;
     
     let index = undefined;
 
@@ -37,6 +42,12 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
         g = colors[i+1];
         b = colors[i+2];
 
+        if(types){
+           t1 = types[i/3];
+           t2 = types[i/3+1];
+           t3 = types[i/3+2];
+        }
+
         index = hash[`${x}-${y}-${z}`];
 
         if(index){
@@ -48,6 +59,10 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
             index = out_position.length;
 
             hash[`${x}-${y}-${z}`] = index;
+
+            if(types){
+               out_type.push(t1,t2,t3);
+            }
 
             out_position.push(x,y,z);
 
@@ -65,7 +80,8 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
         out_index,
         out_position,
         out_color,
-        out_normal
+        out_normal,
+        out_type
     }
 
 }

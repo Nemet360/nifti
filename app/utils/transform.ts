@@ -6,10 +6,11 @@ import { initializeColors } from "./initializeColors";
 import { mergeVertices } from "./mergeVertices";
 import { attributesToGeometry } from "./attributesToGeometry";
 import { smoothGeometry } from "./smoothGeometry";
+import { isNotNil } from "./isNotNil";
 
 
 
-export const transform = file => {
+export const transform = async ({file, atlas}) => {
 
     if( ! file ){
 
@@ -17,32 +18,43 @@ export const transform = file => {
 
     }
 
+    let mask : any = null;
+    
+    let maskDims : any = null;
+    
+    if(isNotNil(atlas)){
+
+        mask = await readNIFTIFile(atlas);
+
+        maskDims = { x : mask.niftiHeader.dims[1], y : mask.niftiHeader.dims[2], z : mask.niftiHeader.dims[3] };
+
+        mask = mask.niftiImage;
+
+    }
+
     const requestData = marchingCubes(); 
 
-    return readNIFTIFile(file)
+    const model : any = await readNIFTIFile(file);
+
+    const { niftiHeader, niftiImage } = model;
     
-    .then((model:niftiData) => {
+    const dims = { x : niftiHeader.dims[1], y : niftiHeader.dims[2], z : niftiHeader.dims[3] };
 
-        const { niftiHeader, niftiImage } = model;
-        
-        const dims = { x : niftiHeader.dims[1], y : niftiHeader.dims[2], z : niftiHeader.dims[3] };
-        
-        const result = requestData({ dims, scalars:niftiImage, datatypeCode:niftiHeader.datatypeCode })
-        
-        const { colors, points, normals } = result;
+    const result = requestData({ dims, scalars:niftiImage, datatypeCode:niftiHeader.datatypeCode, mask, maskDims });
+    
+    const { colors, points, normals, types } = result;
 
-        const rgb = colors ? transformPerfusionColors(colors) : initializeColors(points.length, niftiHeader.datatypeCode); 
+    const rgb = colors ? transformPerfusionColors(colors) : initializeColors(points.length, niftiHeader.datatypeCode); 
 
-        const data = mergeVertices( points, normals, rgb );
+    const data = mergeVertices( points, normals, rgb, types );
 
-        return { 
-            index : data.out_index, 
-            position : data.out_position, 
-            color : data.out_color, 
-            normal : data.out_normal, 
-            niftiHeader
-        }
-      
-    })
+    return { 
+        index : data.out_index, 
+        position : data.out_position, 
+        color : data.out_color, 
+        normal : data.out_normal,
+        type : data.out_type, 
+        niftiHeader
+    }
 
 }

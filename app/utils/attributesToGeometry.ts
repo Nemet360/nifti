@@ -1,9 +1,10 @@
 import * as THREE from "three";
-import { smoothGeometry } from "./smoothGeometry";
+import { compose, ifElse, isEmpty, reject, equals } from 'ramda';
+import { mode } from "./mode";
 
 
 
-export const attributesToGeometry = ({ index, position, color, normal, niftiHeader }) => {
+export const attributesToGeometry = ({ index, position, color, normal, type, niftiHeader }) => {
 
     const geometry = new THREE.BufferGeometry();
 
@@ -17,6 +18,30 @@ export const attributesToGeometry = ({ index, position, color, normal, niftiHead
 
     geometry.computeBoundingBox();
     
-    return geometry;
+    const g = new THREE.Geometry().fromBufferGeometry(geometry);
+
+    for( let i = 0; i < g.faces.length; i++ ){
+
+        const { a, b, c } = g.faces[i];
+
+        const t1 = type[a * 3];
+        
+        const t2 = type[b * 3];
+        
+        const t3 = type[c * 3];
+
+        const list = [t1,t2,t3];
+
+        g.faces[i]['type'] = compose(   
+
+            ifElse( isEmpty, () => 0, mode ),
+
+            reject( equals(0) ) 
+
+        )(list);
+
+    }
+
+    return g;
 
 }

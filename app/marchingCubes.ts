@@ -1,13 +1,15 @@
 import caseTable from './caseTable';
 import { normalize } from './utils/normalize';
-import { Vector3 } from 'three';
+import { mode } from './utils/mode';
 
 
 
 type input = { 
   dims:{ x:number, y:number, z:number }, 
+  maskDims:{ x:number, y:number, z:number }, 
   scalars:number[],
-  datatypeCode:number
+  datatypeCode:number,
+  mask:number[]
 };
 
 
@@ -15,7 +17,8 @@ type input = {
 type output = { 
   normals:any[], 
   points:any[], 
-  colors:any[]
+  colors:any[],
+  types:any[]
 };
 
 
@@ -46,7 +49,6 @@ export const marchingCubes = () : requestData => {
   let voxelScalars = [];
   let voxelGradients = [];
   let voxelPts = [];
-  let edgeMap = new Map();
 
 
 
@@ -211,18 +213,19 @@ export const marchingCubes = () : requestData => {
     dims,
     origin,
     spacing,
-    scalars
+    scalars,
+    mask
   }) => {
-
     const points = [];
     const normals = [];
     const colors = [];
-
+    const types = [];
+    const maskScalars = [];
     const xyz = [];
-
     const n = [];
 
-    let pId;
+    let pId = null;
+    let type = null;
 
     ids[0] = k * slice + j * dims[0] + i;
     ids[1] = ids[0] + 1;
@@ -233,21 +236,25 @@ export const marchingCubes = () : requestData => {
     ids[6] = ids[4] + dims[0];
     ids[7] = ids[6] + 1;
     
-    
-    
     for (let ii = 0; ii < 8; ++ii) { voxelScalars[ii] = scalars[ids[ii]]; }
 
+    if(mask){
 
+      for (let ii = 0; ii < 8; ++ii) { maskScalars[ii] = mask[ids[ii]]; }
+
+      type = mode(maskScalars);
+
+    }
 
     let index = 0;
 
     for (let idx = 0; idx < 8; idx++) {
 
-      if (voxelScalars[VERT_MAP[idx]] >= cVal) {
+        if (voxelScalars[VERT_MAP[idx]] >= cVal) {
 
-        index |= CASE_MASK[idx];
+          index |= CASE_MASK[idx];
 
-      }
+        }
 
     }
 
@@ -298,6 +305,8 @@ export const marchingCubes = () : requestData => {
 
           colors.push( (voxelScalars[edgeVerts[1]] + voxelScalars[edgeVerts[0]]) / 2 );
         
+          types.push(type);
+
         }
 
       }
@@ -307,7 +316,8 @@ export const marchingCubes = () : requestData => {
     return {
       p:points,
       n:normals,
-      c:colors
+      c:colors,
+      t:types
     }
 
   };
@@ -316,7 +326,7 @@ export const marchingCubes = () : requestData => {
 
   return input => {
 
-    const { dims, scalars, datatypeCode } = input;
+    const { dims, maskDims, scalars, datatypeCode, mask } = input;
 
     model.contourValue = datatypeCode===4 ? 180 : 1;
 
@@ -329,6 +339,8 @@ export const marchingCubes = () : requestData => {
     const normals = [];
 
     const colors = color ? [] : null;
+
+    const types = mask ? [] : null;
 
     const slice = x * y;
 
@@ -359,12 +371,13 @@ export const marchingCubes = () : requestData => {
             dims:[x,y,z],
             origin,
             spacing,
-            scalars
+            scalars,
+            mask
           });
 
           if(result && result.p.length > 0){
 
-            const { p, n, c } = result;
+            const { p, n, c, t } = result;
 
             points.push(...p);
 
@@ -373,6 +386,12 @@ export const marchingCubes = () : requestData => {
             if(colors){
 
               colors.push(...avg(c));
+
+            }
+
+            if(types){
+
+              types.push(...t);
 
             }
 
@@ -387,7 +406,8 @@ export const marchingCubes = () : requestData => {
     return { 
       colors, 
       points, 
-      normals
+      normals,
+      types
     } as output
 
   }

@@ -2,7 +2,7 @@ import './assets/fonts/index.css';
 import './assets/styles.css'; 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { isEmpty, path, identity } from 'ramda';
+import { isEmpty, path, identity, reject } from 'ramda';
 import { Component } from "react"; 
 import { Subscription } from 'rxjs';
 import { fromEvent } from 'rxjs/observable/fromEvent'; 
@@ -104,9 +104,11 @@ export class App extends Component<AppProps,AppState>{
 
         const result = path(['dataTransfer','files'])(event);
 
-        console.log(result);
+        const list = [...result];
 
-        this.init([...result]);
+        const atlas = v => v.name==="wBRODMANN_SubCort_WM.nii";
+        
+        this.init({ data:reject(atlas)(list), atlas:list.find(atlas) });
         
     }
 
@@ -160,13 +162,13 @@ export class App extends Component<AppProps,AppState>{
 
 
 
-    init = data => {
+    init = ({data,atlas}) => {
 
         const n = data.length - 1;
 
         this.workers = Array.apply(null, Array(n)).map(v => new Worker('worker.js'));
 
-        this.generateMeshes(data);
+        this.generateMeshes(data, atlas);
 
     }
 
@@ -186,7 +188,7 @@ export class App extends Component<AppProps,AppState>{
 
 
 
-    generateMeshes = data => {
+    generateMeshes = (data, atlas) => {
 
         if( isEmpty(data) ){ return }
 
@@ -194,11 +196,17 @@ export class App extends Component<AppProps,AppState>{
 
         const remainder = data.slice(1, data.length);
 
-        const workers = this.workers.map( workerSend ).map( ( f, i ) => f( remainder[i] ) );
+        const workers = this.workers.map( workerSend ).map( ( f, i ) => f({ file: remainder[i], atlas }) );
 
         
 
-        return Promise.all([ transform(first), ...workers ])
+        return Promise.all([ 
+
+            transform({ file: first, atlas }), 
+
+            ...workers
+
+        ])
 
         .then( collection => {
 
@@ -216,7 +224,7 @@ export class App extends Component<AppProps,AppState>{
 
                 return group;
 
-            } )
+            } );
            
             return meshes.filter(identity);
 

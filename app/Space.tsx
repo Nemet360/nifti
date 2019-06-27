@@ -10,6 +10,11 @@ import { lights } from './utils/lights';
 import { OrbitControls } from './OrbitControls';
 import { isNil } from 'ramda';
 import { getObjectCenter } from './utils/getObjectCenter';
+import InputLabel from '@material-ui/core/InputLabel';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import { regions } from './utils/regions';
 
 
 
@@ -22,7 +27,7 @@ const transparencyEquations = {
 
 interface SpaceProps{
     index:number,
-    group:Mesh,
+    group:any,
     onViewChange:(camera:any) => void,
     camera:PerspectiveCamera
 }
@@ -31,7 +36,8 @@ interface SpaceProps{
 
 interface SpaceState{
     width:number,
-    height:number
+    height:number,
+    region:any
 }
 
 
@@ -53,7 +59,7 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
         this.subscriptions = [];
 
-        this.state = { width : 0, height : 0 };
+        this.state = { width : 0, height : 0, region : 30 };
 
     } 
 
@@ -89,26 +95,8 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
                 mesh.material['transparent'] = true;
 
-                /*
-                if(mesh.userData.front && mesh.userData.dataType==="2" && opacity < 0.7){
-
-                    mesh.material.depthWrite = false;
-
-                }else{
-
-                    mesh.material.depthWrite = true;
-
-                }
-                */
-
             }
 
-            /*
-            if(mesh.userData.transparent && mesh.userData.shader){
-                mesh.material.uniforms.opacity.value = opacity < 0.25 ? 0.25 : opacity; 
-            }
-            */
-           
         });
 
     }
@@ -338,6 +326,40 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
 
 
+    onChangeRegion = event => {
+
+        console.log(event.target.value);
+
+        const group = this.props.group.children.find(m => m.userData.perfusion);
+
+        if( ! group ){ return }
+
+        group.children.map(
+            mesh => {
+
+                for(let i = 0; i < mesh.geometry.faces.length; i++){
+
+                    const selected = event.target.value===mesh.geometry.faces[i].type;
+
+                    mesh.geometry.faces[i].materialIndex = selected ? 1 : 0;
+
+                }
+
+                mesh.geometry.dynamic = true;
+
+                mesh.geometry.elementsNeedUpdate = true;
+
+                mesh.geometry.colorsNeedUpdate = true;
+
+            }
+        )
+            
+        this.setState({region:event.target.value});
+
+    }
+
+
+
     render() {
 
         return isNil(this.props.group) ? null :
@@ -348,6 +370,28 @@ export class Space extends Component<SpaceProps,SpaceState>{
             position : "relative", 
             overflow : "hidden"
         }}>   
+            <div style={{
+                position: "absolute",
+                zIndex: 22,
+                padding: "50px",
+                width: "200px"
+            }}> 
+                <FormControl style={{width:"100%"}}>
+
+                    <InputLabel htmlFor='region-input'>Select region</InputLabel>
+
+                    <Select
+                        value={this.state.region}
+                        onChange={this.onChangeRegion}
+                        inputProps={{name: 'region', id: 'region-input'}}
+                    >
+                    {
+                        regions.map((item,index:number) => <MenuItem style={{fontWeight:500}} key={`item-${index}`} value={item.value}>{item.name}</MenuItem>)
+                    }
+                    </Select>
+
+                </FormControl>
+            </div>
             <div 
                 ref={thisNode => { this.container = thisNode; }}
                 style={{
