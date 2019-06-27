@@ -1,5 +1,9 @@
 export const regions = [
     { 
+        name : "Attention", 
+        value : 0
+    },
+    { 
        name : "Attention", 
        value : 10
     },
@@ -50,5 +54,13 @@ export const regions = [
     {
         name : "Long term memory", 
         value : 140
+    },
+    { 
+        name : "m", 
+        value : 180
+    },
+    { 
+        name : "m", 
+        value : 200
     }
 ]

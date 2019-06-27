@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 
 
-export const attributesToGeometry = ({ index, position, color, normal, niftiHeader }) => {
+export const attributesToGeometry = ({ index, position, color, normal }) => {
 
     const geometry = new THREE.BufferGeometry();
 
@@ -18,6 +18,8 @@ export const attributesToGeometry = ({ index, position, color, normal, niftiHead
 
     //geometry.computeVertexNormals();
     
-    return geometry;
+    const g = new THREE.Geometry().fromBufferGeometry(geometry);
+
+    return g;
 
 }

@@ -246,17 +246,16 @@ export const generators = {
 
         const group = new THREE.Group();
         
-        group.add(m1);
 
-        group.translateZ(7);
+        m1.translateZ(7);
 
-        group.translateX(0.5);
+        m1.translateX(0.5);
 
-        group.userData.brain = true;
+        m1.userData.brain = true;
 
-        group.userData.dataType = "16";
+        m1.userData.dataType = "16";
 
-        return group;
+        return m1;
 
     },
 

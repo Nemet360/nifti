@@ -2,7 +2,7 @@ import './assets/fonts/index.css';
 import './assets/styles.css'; 
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { isEmpty, path, identity, contains } from 'ramda';
+import { isEmpty, path, identity, contains, flatten } from 'ramda';
 import { Component } from "react"; 
 import { Subscription } from 'rxjs';
 import { fromEvent } from 'rxjs/observable/fromEvent'; 
@@ -25,7 +25,7 @@ import { getRandomColor } from './utils/getRandomColor';
 THREE.BufferGeometry.prototype['computeBoundsTree'] = computeBoundsTree;
 THREE.BufferGeometry.prototype['disposeBoundsTree'] = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
-
+const ThreeBSP = require('three-js-csg')(THREE);
 
 
 window['THREE'] = THREE;
@@ -252,21 +252,23 @@ export class App extends Component<AppProps,AppState>{
 
         const values = regions.map(item => item.value);
 
-        const file = data[0];
+        const atlas = data[0];
+
+        const perfusion = data[1];
 
 
 
-        if(file.name!==atlas_name){ return }
+        return Promise.all([
 
+            transform(atlas, values),
 
+            transform(perfusion, null)
 
-        return transform(file, values)
+        ])
 
-        .then( attributes => {
+        .then( ([attributes, perf]) => {
 
-            const g = new THREE.Group();
-
-            attributes.forEach(item => {
+            const meshes = attributes.map( (item,index) => {
 
                 let dc = item.niftiHeader.datatypeCode.toString();
                 
@@ -278,14 +280,40 @@ export class App extends Component<AppProps,AppState>{
 
                 group.userData.type = item.type; 
 
-                g.add(group);
+                group.userData.name = atlas_name;
 
-            });
+                group.userData.atlas = true;
 
-            g.userData.name = atlas_name;
+                return group;
 
-            g.userData.atlas = true;
+            } );
 
+            const g = new THREE.Group();
+
+            let dc = perf.niftiHeader.datatypeCode.toString();
+                
+            const generator = generators[dc];
+        
+            if( ! generator ){ return null }
+
+            const group = generator(perf);
+
+            const perf_bsp = new ThreeBSP(group); 
+
+            [ meshes[4] ].forEach(mesh => {
+
+                const bsp = new ThreeBSP(mesh);
+
+                const result = perf_bsp.subtract(bsp);
+
+                const meshResult = result.toMesh();
+
+                meshResult.material = new THREE.MeshPhongMaterial({ color: 0xdddddd, specular: 0x1a1a1a, shininess: 30  });
+
+                g.add(meshResult);
+
+            })
+        
             return g;
         
         } )

@@ -70,5 +70,8 @@
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "^3.4.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@hi-level/three-csg": "^1.0.3",
+    "three-js-csg": "^72.0.0"
+  }
 }
