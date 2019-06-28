@@ -210,7 +210,7 @@ export class Space extends Component<SpaceProps,SpaceState>{
         this.camera = this.setupCamera(this.container);
      
         this.renderer = this.setupRenderer(this.container);
-
+        
         this.container.appendChild(this.renderer.domElement);
     
         this.controls = this.setupControls(this.container, this.camera, this.onChange, this.onChange);
@@ -341,7 +341,7 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
                     const selected = event.target.value===mesh.geometry.faces[i].type;
 
-                    mesh.geometry.faces[i].materialIndex = selected ? 1 : 0;
+                    mesh.geometry.faces[i].materialIndex = selected ? 0 : 1;
 
                 }
 

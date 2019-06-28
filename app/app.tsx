@@ -190,77 +190,65 @@ export class App extends Component<AppProps,AppState>{
 
     generateMeshes = (data, atlas) => {
 
-        if( isEmpty(data) ){ return }
+        if(isEmpty(data)){ return }
 
         const first = data[0];
 
         const remainder = data.slice(1, data.length);
 
-        const workers = this.workers.map( workerSend ).map( ( f, i ) => f({ file: remainder[i], atlas }) );
+        const workers = this.workers.map(workerSend).map(( f, i ) => f({ file: remainder[i], atlas }));
 
         
 
         return Promise.all([ 
 
-            transform({ file: first, atlas }), 
+            transform({file:first, atlas}), 
 
             ...workers
 
         ])
 
-        .then( collection => {
+        .then(collection => {
 
             const meshes = collection.map( attributes => {
 
                 const dc = attributes.niftiHeader.datatypeCode.toString();
 
                 const generator = generators[dc];
-
-                console.log(dc, generator);
           
                 if( ! generator ){ return null }
 
-                const group = generator(attributes);
-
-                return group;
+                return generator(attributes);
 
             } );
            
             return meshes.filter(identity);
 
-        } )
+        })
 
-        .then( (models:any[]) => {
+        .then((models:any[]) => {
+
+            const perfusions = models.filter(m => m.userData.dataType === '16');
+
+            const remainder = models.filter(m => m.userData.dataType !== '16');
 
             this.setState({ 
                 
-                models : models
-            
-                .filter( m => m.userData.dataType === '16' )
-                
-                .map( m => {
+                models : perfusions.map( m => {
     
                     const group = new THREE.Group();
     
-                    group.add(m.clone());
-        
-                    models.forEach( m => {
-    
-                        if(m.userData.dataType !== "16"){
-    
-                            group.add( m.clone() );
-    
-                        }
-    
-                    } );
-    
+                    group.add( m.clone() );
+                    
+                    remainder.forEach( m => group.add( m.clone() ) );
+
                     return group;
     
                 } )
 
             });
 
-        } )
+        })
 
     }
 

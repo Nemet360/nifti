@@ -1,28 +1,29 @@
 import { marchingCubes } from "../marchingCubes";
 import { readNIFTIFile } from "./readNIFTIFile";
-import { niftiData } from "../types";
 import { transformPerfusionColors } from "./transformPerfusionColors";
 import { initializeColors } from "./initializeColors";
 import { mergeVertices } from "./mergeVertices";
-import { attributesToGeometry } from "./attributesToGeometry";
-import { smoothGeometry } from "./smoothGeometry";
 import { isNotNil } from "./isNotNil";
 
 
 
 export const transform = async ({file, atlas}) => {
 
-    if( ! file ){
-
-        return Promise.resolve(null);
-
-    }
+    if( ! file ){ return Promise.resolve(null) }
 
     let mask : any = null;
     
     let maskDims : any = null;
     
-    if(isNotNil(atlas)){
+    const requestData = marchingCubes(); 
+
+    const model : any = await readNIFTIFile(file);
+
+    const { niftiHeader, niftiImage } = model;
+
+    if(
+        isNotNil(atlas) && niftiHeader.datatypeCode===16
+    ){
 
         mask = await readNIFTIFile(atlas);
 
@@ -31,16 +32,16 @@ export const transform = async ({file, atlas}) => {
         mask = mask.niftiImage;
 
     }
-
-    const requestData = marchingCubes(); 
-
-    const model : any = await readNIFTIFile(file);
-
-    const { niftiHeader, niftiImage } = model;
     
     const dims = { x : niftiHeader.dims[1], y : niftiHeader.dims[2], z : niftiHeader.dims[3] };
 
-    const result = requestData({ dims, scalars:niftiImage, datatypeCode:niftiHeader.datatypeCode, mask, maskDims });
+    const result = requestData({ 
+        dims, 
+        maskDims,
+        scalars:niftiImage, 
+        mask,
+        datatypeCode:niftiHeader.datatypeCode
+    });
     
     const { colors, points, normals, types } = result;
 

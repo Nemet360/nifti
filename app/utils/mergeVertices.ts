@@ -1,3 +1,7 @@
+import { isNotEmpty } from "./isNotEmpty";
+import { isNotNil } from "./isNotNil";
+
+
 
 export const mergeVertices = (position:number[], normal:number[], colors:number[], types:number[]) => {
 
@@ -25,7 +29,7 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
     let t3 = 0;
     
     let index = undefined;
-
+    let withTypes = isNotNil(types) && isNotEmpty(types);
 
 
     for(let i=0; i<position.length; i+=3){
@@ -42,7 +46,7 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
         g = colors[i+1];
         b = colors[i+2];
 
-        if(types){
+        if(withTypes){
            t1 = types[i/3];
            t2 = types[i/3+1];
            t3 = types[i/3+2];
@@ -60,7 +64,7 @@ export const mergeVertices = (position:number[], normal:number[], colors:number[
 
             hash[`${x}-${y}-${z}`] = index;
 
-            if(types){
+            if(withTypes){
                out_type.push(t1,t2,t3);
             }
 

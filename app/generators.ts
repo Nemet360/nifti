@@ -10,81 +10,82 @@ export const generators = {
 
     "16" : attributes => {
 
+        console.log("16", attributes);
+
         const geometry = attributesToGeometry(attributes);
 
-        geometry.scale(0.95, 0.95, 0.95);
+        //geometry.scale(0.95, 0.95, 0.95);
 
         geometry.center();
-
-        /*
-        const material1 = new MeshPhysicalMaterial({
-            side : THREE.FrontSide,
-            vertexColors : THREE.VertexColors,
-            metalness : 0.0,
-            roughness : 0.5,
-            clearCoat : 0.5,
-            clearCoatRoughness : 0.5,
-            reflectivity : 0.5,
-            transparent : false,
-            opacity : 1,
-            clipShadows : true,
-            depthWrite : true
-        });
-
-        const material2 = new MeshPhysicalMaterial({
-            side : THREE.BackSide,
-            vertexColors : THREE.VertexColors,
-            metalness : 0.0,
-            roughness : 0.5,
-            clearCoat : 0.5,
-            clearCoatRoughness : 0.5,
-            reflectivity : 0.5,
-            transparent : true,
-            opacity : 1,
-            clipShadows : true,
-            depthWrite : false
-        });
-        */
 
         const material1 = [
 
             new THREE['MeshToonMaterial']( { 
                 side : THREE.FrontSide,
                 vertexColors : THREE.VertexColors,
-                transparent : true, 
-                depthWrite : false,
-                opacity : 0.1
-            } ),
-
-            new THREE['MeshToonMaterial']( { 
-                side : THREE.BackSide,
-                vertexColors : THREE.VertexColors,
-                transparent : false, 
+                transparent : false,
+                /*
+                metalness : 0.0,
+                roughness : 0.0,
+                clearCoat : 1.0,
+                clearCoatRoughness : 1.0,
+                reflectivity : 1.0,
+                */
                 opacity : 1
-            } )
-            
-        ];
-
-        const material2 = [
+            } ),
 
             new THREE['MeshToonMaterial']( { 
                 side : THREE.FrontSide,
                 vertexColors : THREE.VertexColors,
                 transparent : true, 
                 depthWrite : false,
-                opacity : 0.1
-            } ),
+                /*
+                metalness : 0.0,
+                roughness : 0.0,
+                clearCoat : 1.0,
+                clearCoatRoughness : 1.0,
+                reflectivity : 1.0,
+                */
+                opacity : 0.05
+            } )
+
+        ];
+
+        const material2 = [
 
             new THREE['MeshToonMaterial']( { 
                 side : THREE.BackSide,
                 vertexColors : THREE.VertexColors,
                 transparent : false, 
+                /*
+                metalness : 0.0,
+                roughness : 0.0,
+                clearCoat : 1.0,
+                clearCoatRoughness : 1.0,
+                reflectivity : 1.0,
+                */
                 opacity : 1
+            } ),
+
+            new THREE['MeshToonMaterial']( { 
+                side : THREE.BackSide,
+                vertexColors : THREE.VertexColors,
+                transparent : true, 
+                depthWrite : false,
+                /*
+                metalness : 0.0,
+                roughness : 0.0,
+                clearCoat : 1.0,
+                clearCoatRoughness : 1.0,
+                reflectivity : 1.0,
+                */
+                opacity : 0.05
             } )
             
         ];
         
         const m1 = new THREE.Mesh(geometry, material1);
+
         const m2 = new THREE.Mesh(geometry, material2);
 
         const group = new THREE.Group();
@@ -93,9 +94,9 @@ export const generators = {
 
         group.add(m2);
 
-        group.translateZ(7);
+        //group.translateZ(7);
 
-        group.translateX(0.5);
+        //group.translateX(0.5);
 
         group.userData.brain = true;
 
