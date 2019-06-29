@@ -14,38 +14,38 @@ export const generators = {
 
         const geometry = attributesToGeometry(attributes);
 
-        //geometry.scale(0.95, 0.95, 0.95);
+        geometry.scale(0.95, 0.95, 0.95);
 
         geometry.center();
 
         const material1 = [
 
-            new THREE['MeshToonMaterial']( { 
+            new THREE['MeshPhysicalMaterial']( { 
                 side : THREE.FrontSide,
                 vertexColors : THREE.VertexColors,
                 transparent : false,
-                /*
+                
                 metalness : 0.0,
                 roughness : 0.0,
                 clearCoat : 1.0,
                 clearCoatRoughness : 1.0,
                 reflectivity : 1.0,
-                */
+                
                 opacity : 1
             } ),
 
-            new THREE['MeshToonMaterial']( { 
+            new THREE['MeshPhysicalMaterial']( { 
                 side : THREE.FrontSide,
                 vertexColors : THREE.VertexColors,
                 transparent : true, 
                 depthWrite : false,
-                /*
+                
                 metalness : 0.0,
                 roughness : 0.0,
                 clearCoat : 1.0,
                 clearCoatRoughness : 1.0,
                 reflectivity : 1.0,
-                */
+                
                 opacity : 0.05
             } )
 
@@ -53,32 +53,32 @@ export const generators = {
 
         const material2 = [
 
-            new THREE['MeshToonMaterial']( { 
+            new THREE['MeshPhysicalMaterial']( { 
                 side : THREE.BackSide,
                 vertexColors : THREE.VertexColors,
-                transparent : false, 
-                /*
+                transparent : false,
+                
                 metalness : 0.0,
                 roughness : 0.0,
                 clearCoat : 1.0,
                 clearCoatRoughness : 1.0,
                 reflectivity : 1.0,
-                */
+                
                 opacity : 1
             } ),
 
-            new THREE['MeshToonMaterial']( { 
+            new THREE['MeshPhysicalMaterial']( { 
                 side : THREE.BackSide,
                 vertexColors : THREE.VertexColors,
                 transparent : true, 
                 depthWrite : false,
-                /*
+                
                 metalness : 0.0,
                 roughness : 0.0,
                 clearCoat : 1.0,
                 clearCoatRoughness : 1.0,
                 reflectivity : 1.0,
-                */
+                
                 opacity : 0.05
             } )
             
@@ -87,6 +87,14 @@ export const generators = {
         const m1 = new THREE.Mesh(geometry, material1);
 
         const m2 = new THREE.Mesh(geometry, material2);
+        
+        m1.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
+
+        m2.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
+
+        m1.renderOrder = 1;
+
+        m2.renderOrder = 1;
 
         const group = new THREE.Group();
         
@@ -94,9 +102,9 @@ export const generators = {
 
         group.add(m2);
 
-        //group.translateZ(7);
+        group.translateZ(7);
 
-        //group.translateX(0.5);
+        group.translateX(0.5);
 
         group.userData.brain = true;
 
@@ -127,7 +135,7 @@ export const generators = {
             transparent : false,
             opacity : 1,
             clipShadows : true,
-            depthWrite : true
+            depthWrite : false
         });
 
         const material2 = new MeshPhysicalMaterial({
@@ -146,21 +154,29 @@ export const generators = {
 
         const m1 = new THREE.Mesh(geometry, material1);
 
-        const m2 = new THREE.Mesh(geometry, material2);
+        //const m2 = new THREE.Mesh(geometry, material2);
+
+        m1.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
+
+        //m2.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
+
+        m1.renderOrder = 2;
+
+        //m2.renderOrder = 2;
 
         m1.userData.transparent = true;
 
-        m2.userData.transparent = true;
+        //m2.userData.transparent = true;
 
         m1.userData.dataType = "2";
 
-        m2.userData.dataType = "2";
+        //m2.userData.dataType = "2";
 
         const group = new THREE.Group();
         
         group.add(m1);
 
-        group.add(m2);
+        //group.add(m2);
 
         group.userData.brain = true;
 
@@ -210,29 +226,37 @@ export const generators = {
 
         const m1 = new THREE.Mesh(geometry, material1);
 
-        const m2 = new THREE.Mesh(geometry, material2);
+        //const m2 = new THREE.Mesh(geometry, material2);
+
+        m1.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
+
+        //m2.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
+
+        m1.renderOrder = 3;
+
+        //m2.renderOrder = 3;
 
         m1.userData.transparent = true;
 
-        m2.userData.transparent = true;
+        //m2.userData.transparent = true;
 
         m1.userData.dataType = "4";
 
-        m2.userData.dataType = "4";
+        //m2.userData.dataType = "4";
 
         m1.rotation.x = 2 * Math.PI;
 
         m1.rotation.y = 2 * Math.PI;
 
-        m2.rotation.x = 2 * Math.PI;
+        //m2.rotation.x = 2 * Math.PI;
 
-        m2.rotation.y = 2 * Math.PI;
+        //m2.rotation.y = 2 * Math.PI;
 
         const group = new THREE.Group();
         
         group.add(m1);
         
-        group.add(m2);
+        //group.add(m2);
 
         group.userData.brain = true;
 

@@ -268,7 +268,9 @@ export class Space extends Component<SpaceProps,SpaceState>{
         renderer.setClearColor(0xeeeeee); 
 
         renderer.setPixelRatio(window.devicePixelRatio);
-        
+
+        renderer.autoClear = false; // @ ???
+
         renderer.gammaInput = true;
 
         renderer.gammaOutput = true;
@@ -317,6 +319,8 @@ export class Space extends Component<SpaceProps,SpaceState>{
 
 
     animate = () => {  
+
+        //this.renderer.clearDepth();
 
         this.renderer.render(this.scene, this.camera);
 
